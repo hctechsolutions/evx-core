@@ -3,15 +3,15 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 
 /**
  * @title NebulaToken
  * @dev ERC-20 token for the Nebula platform with governance and vesting.
  */
-contract NebulaToken is ERC20, ERC20Votes, ERC20Permit, Ownable, Pausable {
+contract NebulaToken is ERC20, ERC20Votes, ERC20Permit, Ownable, ERC20Pausable {
     uint256 public constant MAX_SUPPLY = 100_000_000 * 10**18; // 100M Tokens
 
     struct VestingSchedule {
