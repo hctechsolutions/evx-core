@@ -47,7 +47,7 @@ contract TokenVesterTest is Test {
     }
 
     // Test 1: Verify initial setup
-    function testInitialSetup() public {
+    function testInitialSetup() public view {
         assertEq(address(vesting.token()), address(token));
         assertEq(vesting.start(), block.timestamp);
         assertEq(vesting.cliffDuration(), CLIFF_DURATION);
