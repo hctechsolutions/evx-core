@@ -2,9 +2,13 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@contracts/TokenVester.sol";
+import "@nebula/contracts/TokenVester.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+/**
+ * @title TokenVesterTest
+ * @dev Unit tests for the TokenVester contract
+ */
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock Token", "MOCK") {}
     
@@ -25,11 +29,12 @@ contract TokenVesterTest is Test {
     address public owner = address(0x1);
     address public nonOwner = address(0x2);
 
+    /**
+     * @dev Sets up the test environment
+     */
     function setUp() public {
-        // Set up the environment
         vm.startPrank(owner);
         
-        // Deploy contracts
         token = new MockERC20();
         vesting = new TokenVester(
             token,
@@ -40,13 +45,14 @@ contract TokenVesterTest is Test {
             owner
         );
 
-        // Mint tokens to the vesting contract
         token.mint(address(vesting), TOTAL_ALLOCATION);
         
         vm.stopPrank();
     }
 
-    // Test 1: Verify initial setup
+    /**
+     * @dev Tests initial contract setup
+     */
     function testInitialSetup() public view {
         assertEq(address(vesting.token()), address(token));
         assertEq(vesting.start(), block.timestamp);
@@ -56,19 +62,25 @@ contract TokenVesterTest is Test {
         assertEq(vesting.vestingDuration(), VESTING_DURATION);
     }
 
-    // Test 2: Before cliff - no tokens released
+    /**
+     * @dev Tests that no tokens are vested before the cliff period
+     */
     function testBeforeCliff() public {
         vm.warp(vesting.start() + CLIFF_DURATION - 1);
         assertEq(vesting.calculateVestedAmount(), 0);
     }
 
-    // Test 3: Release immediately after cliff
+    /**
+     * @dev Tests that the initial release occurs immediately after the cliff
+     */
     function testAtCliff() public {
         vm.warp(vesting.start() + CLIFF_DURATION);
         assertEq(vesting.calculateVestedAmount(), INITIAL_RELEASE);
     }
 
-    // Test 4: Partial release during vesting
+    /**
+     * @dev Tests partial token release during the vesting period
+     */
     function testDuringVesting() public {
         uint256 halfVesting = CLIFF_DURATION + (VESTING_DURATION / 2);
         vm.warp(vesting.start() + halfVesting);
@@ -81,13 +93,17 @@ contract TokenVesterTest is Test {
         assertEq(vesting.calculateVestedAmount(), expected);
     }
 
-    // Test 5: After the entire vesting period
+    /**
+     * @dev Tests full token release after the vesting period
+     */
     function testAfterVesting() public {
         vm.warp(vesting.start() + CLIFF_DURATION + VESTING_DURATION + 1);
         assertEq(vesting.calculateVestedAmount(), TOTAL_ALLOCATION);
     }
 
-    // Test 6: Release tokens
+    /**
+     * @dev Tests token release functionality
+     */
     function testRelease() public {
         vm.warp(vesting.start() + CLIFF_DURATION + VESTING_DURATION);
         
@@ -99,9 +115,10 @@ contract TokenVesterTest is Test {
         assertEq(vesting.released(), TOTAL_ALLOCATION);
     }
 
-    // Test 7: Multiple releases
+    /**
+     * @dev Tests multiple releases over time
+     */
     function testMultipleReleases() public {
-        // First release (50% of the period)
         vm.warp(vesting.start() + CLIFF_DURATION + (VESTING_DURATION / 2));
         vm.prank(owner);
         vesting.release();
@@ -111,7 +128,6 @@ contract TokenVesterTest is Test {
             (VESTING_DURATION / 2) / 
             VESTING_DURATION;
 
-        // Second release (100% of the period)
         vm.warp(vesting.start() + CLIFF_DURATION + VESTING_DURATION);
         vm.prank(owner);
         vesting.release();
@@ -120,7 +136,9 @@ contract TokenVesterTest is Test {
         assertEq(token.balanceOf(owner), firstRelease + (TOTAL_ALLOCATION - firstRelease));
     }
 
-    // Test 8: Only the owner can release tokens
+    /**
+     * @dev Tests that only the owner can release tokens
+     */
     function testOnlyOwnerCanRelease() public {
         vm.warp(vesting.start() + CLIFF_DURATION);
         vm.prank(nonOwner);
@@ -128,14 +146,16 @@ contract TokenVesterTest is Test {
         vesting.release();
     }
 
-    // Test 9: Cannot release without available tokens
+    /**
+     * @dev Tests that tokens cannot be released if none are available
+     */
     function testNothingToRelease() public {
         vm.warp(vesting.start() + CLIFF_DURATION);
         vm.prank(owner);
-        vesting.release(); // Release the first portion
+        vesting.release();
         
         vm.prank(owner);
         vm.expectRevert("No tokens to release");
-        vesting.release(); // Try to release again without time change
+        vesting.release();
     }
 }

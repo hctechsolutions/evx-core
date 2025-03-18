@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
-import { NBLToken } from "@contracts/Token.sol";
-import { TokenVester } from "@contracts/TokenVester.sol";
+import { NBLToken } from "@nebula/contracts/Token.sol";
+import { TokenVester } from "@nebula/contracts/TokenVester.sol";
 import "forge-std/console.sol";
 
 contract DeployNBL is Script {

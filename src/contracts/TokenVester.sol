@@ -5,6 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+/**
+ * @title TokenVester
+ * @notice Handles token vesting with cliff and gradual release
+ */
 contract TokenVester is Ownable {
     using SafeERC20 for IERC20;
 
@@ -19,6 +23,15 @@ contract TokenVester is Ownable {
 
     event TokensReleased(uint256 amount);
 
+    /**
+     * @notice Initializes the vesting contract
+     * @param _token The token to be vested
+     * @param _cliffDuration The time before vesting starts
+     * @param _initialRelease The initial release amount
+     * @param _totalAllocation Total amount allocated for vesting
+     * @param _vestingDuration Duration of the vesting period
+     * @param _owner Owner of the contract
+     */
     constructor(
         IERC20 _token,
         uint256 _cliffDuration,
@@ -28,6 +41,7 @@ contract TokenVester is Ownable {
         address _owner
     ) Ownable(_owner) {
         require(_totalAllocation > _initialRelease, "Invalid allocation");
+        require(_vestingDuration > 0, "Vesting duration must be greater than 0");
         
         token = _token;
         start = block.timestamp;
@@ -37,6 +51,9 @@ contract TokenVester is Ownable {
         vestingDuration = _vestingDuration;
     }
 
+    /**
+     * @notice Releases vested tokens
+     */
     function release() external onlyOwner {
         uint256 vested = calculateVestedAmount();
         require(vested > released, "No tokens to release");
@@ -48,6 +65,10 @@ contract TokenVester is Ownable {
         emit TokensReleased(amount);
     }
 
+    /**
+     * @notice Calculates the amount of tokens vested
+     * @return The amount of vested tokens
+     */
     function calculateVestedAmount() public view returns (uint256) {
         if (block.timestamp < start + cliffDuration) {
             return 0;
