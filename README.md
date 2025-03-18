@@ -1,66 +1,144 @@
-## Foundry
+# Nebula Finances Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository contains the implementation of the smart contracts that comprise the Nebula Finances system, covering governance, liquidity, rewards, vesting, and price oracle modules. The architecture leverages OpenZeppelin standards and libraries, with integrations using Chainlink and governance mechanisms inspired by OpenZeppelin's Governor.
 
-Foundry consists of:
+---
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Overview
 
-## Documentation
+The application is divided into several key modules:
 
-https://book.getfoundry.sh/
+- **Governance**  
+  - **GovernanceDAO**: Manages proposals, voting, and the execution of critical updates and parameters.  
+  - **NBLToken**: A governance token with voting and permit capabilities, used for delegating votes and participating in decision-making.
 
-## Usage
+- **Liquidity**  
+  - **LiquidityPool**: An Automated Market Maker (AMM) that enables token swaps and liquidity provision by users.  
+  - **PriceOracleTWAP**: A price oracle that aggregates multiple data sources with fallback and consensus mechanisms to provide a reliable price for the AMM.
 
-### Build
+- **Rewards**  
+  - **RewardSystem**: Distributes rewards based on liquidity snapshots and multipliers (boosters).  
+  - **TokenVester**: Manages the gradual release of tokens according to a vesting schedule with a cliff and progressive release.
 
-```shell
-$ forge build
+---
+
+## Architecture and Interactions
+
+The system is composed of different modules that interact with each other:
+
+- **Governance**:  
+  The DAO creates and manages proposals, controls the execution of updates, and sets critical parameters. The NBLToken is used to delegate votes and participate in governance decisions.
+
+- **Liquidity**:  
+  The LiquidityPool allows users to provide liquidity and perform swaps, generating fees that may be redistributed via governance. The PriceOracleTWAP provides the necessary price data for pool operations.
+
+- **Rewards**:  
+  The RewardSystem calculates and distributes rewards based on snapshots of the LiquidityPool. The TokenVester manages the token release according to a defined vesting schedule.
+
+---
+
+## Prerequisites
+
+- [Foundry](https://getfoundry.sh/) – a tool for developing, testing, and deploying Solidity contracts  
+- [Git](https://git-scm.com/)  
+- [Anvil](https://book.getfoundry.sh/reference/anvil) – Foundry's local Ethereum node
+
+---
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/jeffersson-abreu/nebula_contracts.git
+   cd nebula_contracts
+   ```
+
+2. Ensure you have Foundry installed and updated:
+
+   ```bash
+   forge --version
+   ```
+
+3. Start a local Anvil node:
+
+   ```bash
+   anvil
+   ```
+
+---
+
+## Environment Configuration
+
+Before running tests or deploying contracts, set up a .env file in the root directory based on the .env-example file. If you need assistance filling in the keys, contact your supervisor.
+
+### `.env-example`
+
+```ini
+RPC_URL="https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
+PRIVATE_KEY="YOUR_WALLET_PRIVATE_KEY"
+ETHERSCAN_API_KEY="YOUR_ETHERSCAN_API_KEY"
+...
 ```
 
-### Test
+---
 
-```shell
-$ forge test
-```
+## Running Tests
 
-### Format
+The tests are written using Foundry's testing framework. To run the tests:
 
-```shell
-$ forge fmt
-```
+1. Compile the contracts:
 
-### Gas Snapshots
+   ```bash
+   forge build
+   ```
 
-```shell
-$ forge snapshot
-```
+2. Run the tests:
 
-### Anvil
+   ```bash
+   forge test
+   ```
 
-```shell
-$ anvil
-```
+Ensure that all tests pass before proceeding with deployment.
 
-### Deploy
+---
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+## Contract Deployment
 
-### Cast
+Deployment is handled via Foundry scripts located in the `scripts` folder. The main deploy script is `Deploy.s.sol`.
 
-```shell
-$ cast <subcommand>
-```
+To deploy the contracts on a local network using Anvil:
 
-### Help
+1. Compile the contracts (if not already compiled):
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+   ```bash
+   forge build
+   ```
+
+2. Run the deploy script using Anvil as your local RPC:
+
+   ```bash
+   forge script scripts/Deploy.s.sol --fork-url http://127.0.0.1:8545 --broadcast
+   ```
+
+   - Replace the RPC URL if necessary.
+   - The `--broadcast` flag sends transactions to the network.
+
+Review the contents of `Deploy.s.sol` for details on the deployment order and parameters used for each contract.
+
+---
+
+## Contributing
+
+Feel free to submit pull requests with improvements, bug fixes, or new features.  
+Please open an issue before making significant changes to discuss their impact.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+If you have any questions or need further information, please contact us!

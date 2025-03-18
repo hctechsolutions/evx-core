@@ -1,0 +1,64 @@
+flowchart TD
+    %% Governance Subgraph
+    subgraph Governance
+      DAO[GovernanceDAO]
+      TL[TimelockController - Delay and Queue]
+      Proposals[Proposal Lifecycle - Pending, Active, Succeeded, Queued, Executed, Defeated]
+      Voting[Voting Process - for, against, abstain]
+      Roles[Roles and Permissions]
+      NBL[NBLToken - Governance Token]
+    end
+
+    %% Liquidity Subgraph
+    subgraph Liquidity
+      LP[LiquidityPool - AMM]
+      Reserves[Pool Reserves]
+      Oracle[PriceOracleTWAP - Oracle]
+      LPUsers[Liquidity Providers]
+    end
+
+    %% Rewards Subgraph
+    subgraph Rewards
+      RS[RewardSystem - Rewards Distribution]
+      Snapshots[Liquidity Snapshots]
+      Booster[Booster Multipliers]
+      Vester[TokenVester - Vesting]
+      Claim[Reward Claim Function]
+    end
+
+    %% Governance Interactions
+    DAO -->|Creates, Queues, Executes| Proposals
+    DAO -->|Schedules proposals via| TL
+    DAO -->|Conducts voting using| Voting
+    DAO -->|Manages roles| Roles
+    DAO -->|Oversees rewards| RS
+    DAO -->|Controls vesting release| Vester
+    Voting -->|Utilizes voting power from| NBL
+
+    %% Liquidity Interactions
+    LP -->|Fetches price from| Oracle
+    LP -->|Updates| Reserves
+    LPUsers -->|Provide liquidity to| LP
+    LP -->|Generates fees for| DAO
+
+    %% Oracle Details
+    Oracle -->|Triggers fallback if consensus fails| RS
+
+    %% Rewards Interactions
+    RS -->|Calculates rewards using| Snapshots
+    Snapshots -->|Captured from LP activity| LP
+    RS -->|Applies booster multipliers from| Booster
+    RS -->|Initiates vesting release via| Vester
+    Vester -->|Releases vested tokens to| NBL
+    RS -->|Reward claim function| Claim
+
+    %% Cross-Module Connections
+    LPUsers -->|May delegate tokens for voting| NBL
+    Roles -->|Assigns governance rights to| DAO
+
+    %% Detailing Proposal Cycle
+    Proposals -->|States: Pending, Active, Succeeded, Queued, Executed, Defeated| DAO
+
+    %% Additional Information
+    Claim -->|Allows users to claim rewards| LPUsers
+    Vester -->|Follows vesting schedule including cliff and gradual release| LPUsers
