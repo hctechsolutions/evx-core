@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "@nebula/contracts/GovernanceDAO.sol";
-import "@nebula/contracts/Token.sol";
+import "@nebula/contracts/GovernanceToken.sol";
 import "@openzeppelin/contracts/governance/TimelockController.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
  */
 contract GovernanceDAOTest is Test {
     GovernanceDAO public dao;
-    NBLToken public token;
+    GovernanceToken public token;
     TimelockController public timelock;
     
     address public constant ADMIN = address(1);
@@ -41,7 +41,7 @@ contract GovernanceDAOTest is Test {
      */
     function setUp() public {
         // Deploy Governance Token
-        token = new NBLToken(ADMIN);
+        token = new GovernanceToken(ADMIN);
         
         // Transfer tokens from ADMIN to voters
         vm.startPrank(ADMIN);

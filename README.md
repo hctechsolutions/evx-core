@@ -10,7 +10,7 @@ The application is divided into several key modules:
 
 - **Governance**  
   - **GovernanceDAO**: Manages proposals, voting, and the execution of critical updates and parameters.  
-  - **NBLToken**: A governance token with voting and permit capabilities, used for delegating votes and participating in decision-making.
+  - **GovernanceToken**: A governance token with voting and permit capabilities, used for delegating votes and participating in decision-making.
 
 - **Liquidity**  
   - **LiquidityPool**: An Automated Market Maker (AMM) that enables token swaps and liquidity provision by users.  
@@ -27,7 +27,7 @@ The application is divided into several key modules:
 The system is composed of different modules that interact with each other:
 
 - **Governance**:  
-  The DAO creates and manages proposals, controls the execution of updates, and sets critical parameters. The NBLToken is used to delegate votes and participate in governance decisions.
+  The DAO creates and manages proposals, controls the execution of updates, and sets critical parameters. The GovernanceToken is used to delegate votes and participate in governance decisions.
 
 - **Liquidity**:  
   The LiquidityPool allows users to provide liquidity and perform swaps, generating fees that may be redistributed via governance. The PriceOracleTWAP provides the necessary price data for pool operations.

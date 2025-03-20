@@ -4,22 +4,22 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@nebula/contracts/Token.sol";
+import "@nebula/contracts/GovernanceToken.sol";
 
 /**
- * @title NBLTokenTest
- * @dev Unit tests for the NBLToken contract.
+ * @title GovernanceTokenTest
+ * @dev Unit tests for the GovernanceToken contract.
  */
-contract NBLTokenTest is Test {
-    NBLToken public token;
+contract GovernanceTokenTest is Test {
+    GovernanceToken public token;
     address public owner = address(1);
     address public user = address(2);
 
     /**
-     * @dev Sets up the test environment by deploying the NBLToken contract.
+     * @dev Sets up the test environment by deploying the GovernanceToken contract.
      */
     function setUp() public {
-        token = new NBLToken(owner);
+        token = new GovernanceToken(owner);
     }
 
     /**
@@ -35,7 +35,7 @@ contract NBLTokenTest is Test {
      * @dev Tests the token name and symbol.
      */
     function testNameSymbol() public {
-        assertEq(token.name(), "NBL Governance Token");
+        assertEq(token.name(), "Nebula Governance Token");
         assertEq(token.symbol(), "NBL");
     }
 
