@@ -53,7 +53,7 @@ jobs:
       - name: Archive documentation artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: forge-docs
+          name: docs
           path: docs/
   
   deploy:
@@ -71,12 +71,16 @@ jobs:
           aws --version
 
       - uses: actions/checkout@v4
-      - name: Build and publish documentations
+      - name: Download documentation artifacts
         uses: actions/download-artifact@v4
         with:
-          name: forge-docs
-          path: docs/
+          name: docs
+          path: .
+
+      - uses: actions/checkout@v4
+      - name: Build and publish documentations
         run: |
+          ls -al
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
           docker build -t docs:latest .
           docker tag docs:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
