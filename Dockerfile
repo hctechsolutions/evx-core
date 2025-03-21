@@ -1,11 +1,11 @@
 # Use a lightweight Nginx image to serve static files
 FROM nginx:alpine
 
-# Define the directory where the documentation está located
+# Define the directory where the documentation is located
 ARG DOCS_DIR=docs/book
 
-# Copy the documentation para dentro de /usr/share/nginx/html/book/
-COPY ${DOCS_DIR} /usr/share/nginx/html/book/
+# Copy the documentation to Nginx's default serving directory
+COPY ${DOCS_DIR} /usr/share/nginx/html
 
 # Expose port 80 to serve the documentation
 EXPOSE 80
