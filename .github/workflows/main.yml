@@ -47,7 +47,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run Forge docs
-        uses: actions/checkout@v4
         run: forge doc --build
         id: doc
 
@@ -55,13 +54,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docs
-          path: docs/
-  
+          path: docs/  # 🔥 Garante que toda a pasta `docs/` seja salva
+
   deploy:
     name: Deploy Documentation
     runs-on: ubuntu-latest
     needs: docs
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install system dependencies
         run: |
           sudo apt update
@@ -71,17 +72,17 @@ jobs:
           sudo ./aws/install --update
           aws --version
 
-      - uses: actions/checkout@v4
-
       - name: Download documentation artifacts
         uses: actions/download-artifact@v4
         with:
           name: docs
           path: .
 
-      - name: Build and publish documentations
+      - name: Verificar estrutura dos arquivos baixados
+        run: ls -lR docs/
+
+      - name: Build and publish documentation
         run: |
-          ls -al **/**/**/**
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
           docker build -t docs:latest .
           docker tag docs:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
