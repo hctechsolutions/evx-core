@@ -1,15 +1,14 @@
-# Use uma imagem leve do Nginx para servir os arquivos estáticos
+# Use a lightweight Nginx image to serve static files
 FROM nginx:alpine
 
-# Defina o diretório onde a documentação está localizada
+# Define the directory where the documentation is located
 ARG DOCS_DIR=docs/book
 
-# Copia a documentação para o diretório padrão do Nginx
+# Copy the documentation to Nginx's default serving directory
 COPY ${DOCS_DIR} /usr/share/nginx/html
 
-# Exponha a porta 80 para servir a documentação
-EXPOSE 8080
+# Expose port 80 to serve the documentation
 EXPOSE 80
 
-# Comando padrão para rodar o Nginx
+# Default command to run Nginx
 CMD ["nginx", "-g", "daemon off;"]
