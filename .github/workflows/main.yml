@@ -47,6 +47,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run Forge docs
+        uses: actions/checkout@v4
         run: forge doc --build
         id: doc
 
@@ -80,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and publish documentations
         run: |
-          ls -al
+          ls -al **/**/**/**
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
           docker build -t docs:latest .
           docker tag docs:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
