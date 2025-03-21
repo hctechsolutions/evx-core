@@ -72,13 +72,13 @@ jobs:
           aws --version
 
       - uses: actions/checkout@v4
+
       - name: Download documentation artifacts
         uses: actions/download-artifact@v4
         with:
           name: docs
           path: .
 
-      - uses: actions/checkout@v4
       - name: Build and publish documentations
         run: |
           ls -al **/**/**/**
