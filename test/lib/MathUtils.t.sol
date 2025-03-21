@@ -58,9 +58,9 @@ contract MathUtilsTest is Test {
         assertEq(MathUtils.sqrt(9), 3);
         assertEq(MathUtils.sqrt(16), 4);
         assertEq(MathUtils.sqrt(25), 5);
-        
+
         // Non-perfect square rounding
-        assertEq(MathUtils.sqrt(8), 2);  // Floor(2.82) = 2
+        assertEq(MathUtils.sqrt(8), 2); // Floor(2.82) = 2
         assertEq(MathUtils.sqrt(18), 4); // Floor(4.24) = 4
 
         // Large numbers

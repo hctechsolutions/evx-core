@@ -63,14 +63,13 @@ contract MockOracle is IPriceOracle {
     }
 }
 
-
 contract LiquidityPoolTest is Test {
     LiquidityPool public pool;
     MockERC20 public token0;
     MockERC20 public token1;
     MockOracle public oracle;
     address public user = address(0x123);
-    
+
     event LiquidityAdded(uint256 tokenId, uint256 liquidity, int24 lowerTick, int24 upperTick);
     event Swapped(address indexed fromToken, address indexed toToken, uint256 amountIn, uint256 amountOut);
     event LiquidityRemoved(uint256 tokenId, uint256 amountToken0, uint256 amountToken1);
@@ -101,10 +100,10 @@ contract LiquidityPoolTest is Test {
 
         (uint256 liquidity, int24 lowerTick, int24 upperTick, uint256 entryPrice,,) = pool.positions(tokenId);
 
-        assertEq(liquidity, 1e18);  // Ensure correct liquidity amount
+        assertEq(liquidity, 1e18); // Ensure correct liquidity amount
         assertEq(entryPrice, 2e18); // Ensure correct entry price from oracle
-        assertEq(lowerTick, 1);     // Ensure correct lower tick
-        assertEq(upperTick, 3);     // Ensure correct upper tick
+        assertEq(lowerTick, 1); // Ensure correct lower tick
+        assertEq(upperTick, 3); // Ensure correct upper tick
     }
 
     /**
@@ -142,7 +141,7 @@ contract LiquidityPoolTest is Test {
 
         (uint256 liquidity1,,,,,) = pool.positions(tokenId1);
         (uint256 liquidity2,,,,,) = pool.positions(tokenId2);
-        
+
         assertEq(liquidity1, 1e18); // Ensure first position is stored correctly
         assertEq(liquidity2, 2e18); // Ensure second position is stored correctly
     }
@@ -187,8 +186,8 @@ contract LiquidityPoolTest is Test {
         // Expected swap amount considering 0.3% fee
         uint256 amountInAfterFee = 1e18 - (1e18 * 3) / 1000; // 0.3% fee applied
         uint256 amountInWithFee = MathUtils.wadMul(amountInAfterFee, 997e15); // Apply fee using contract logic
-        
-        uint256 reserveIn = 3e18;  // Token0 balance in the pool
+
+        uint256 reserveIn = 3e18; // Token0 balance in the pool
         uint256 reserveOut = 6e18; // Token1 balance in the pool (3e18 * 2)
         uint256 expectedAmountOut = (amountInWithFee * reserveOut) / (reserveIn * 1000 + amountInWithFee);
 
@@ -238,7 +237,7 @@ contract LiquidityPoolTest is Test {
         vm.startPrank(user);
         uint256 tokenId = pool.addLiquidity(1e18, 1, 3);
         vm.stopPrank();
-        
+
         (uint256 liquidity,,,,,) = pool.positions(tokenId);
         assertEq(liquidity, 1e18);
     }
@@ -290,7 +289,7 @@ contract LiquidityPoolTest is Test {
         token1.mint(user, 6e24);
 
         token0.transfer(user, 5e24);
-        token1.transfer(user, 5e24); 
+        token1.transfer(user, 5e24);
 
         // Add a large liquidity amount to support the swap
         pool.addLiquidity(1e24, 1, 3);
@@ -396,7 +395,7 @@ contract LiquidityPoolTest is Test {
         pool.claimFees(tokenId);
 
         // Ensure that after claiming, there are no more fees left
-        (, , , , uint256 feeGrowthToken0, uint256 feeGrowthToken1) = pool.positions(tokenId);
+        (,,,, uint256 feeGrowthToken0, uint256 feeGrowthToken1) = pool.positions(tokenId);
         assertEq(feeGrowthToken0, pool.feeGrowthGlobalToken0(), "Fee growth not reset for Token0");
         assertEq(feeGrowthToken1, pool.feeGrowthGlobalToken1(), "Fee growth not reset for Token1");
 

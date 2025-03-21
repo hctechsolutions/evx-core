@@ -35,23 +35,15 @@ contract PriceOracleTWAP is IPriceOracle, Ownable {
      * @notice Adds a new oracle configuration
      * @dev Only callable by the contract owner
      */
-    function addOracle(
-        address source,
-        uint256 maxDeviationBps,
-        uint256 heartbeat,
-        uint8 decimals
-    ) external onlyOwner {
+    function addOracle(address source, uint256 maxDeviationBps, uint256 heartbeat, uint8 decimals) external onlyOwner {
         require(source != address(0), "Invalid oracle address");
         require(maxDeviationBps > 0, "Max deviation must be greater than zero");
         require(heartbeat > 0, "Heartbeat must be greater than zero");
-        
-        oracles.push(OracleConfig({
-            source: source,
-            maxDeviationBps: maxDeviationBps,
-            heartbeat: heartbeat,
-            decimals: decimals
-        }));
-        
+
+        oracles.push(
+            OracleConfig({source: source, maxDeviationBps: maxDeviationBps, heartbeat: heartbeat, decimals: decimals})
+        );
+
         emit OracleAdded(source, maxDeviationBps, heartbeat, decimals);
     }
 

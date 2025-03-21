@@ -11,12 +11,11 @@ import "forge-std/console.sol";
  * @dev Each NFT corresponds to a liquidity position with specific price range (ticks).
  */
 contract PositionNFT is ERC721, Ownable {
-    
     /// @dev Represents a liquidity position with its parameters.
     struct Position {
         uint256 liquidity; // Amount of liquidity provided
-        int24 lowerTick;   // Lower bound of the price range
-        int24 upperTick;   // Upper bound of the price range
+        int24 lowerTick; // Lower bound of the price range
+        int24 upperTick; // Upper bound of the price range
     }
 
     /// @dev Mapping from token ID to liquidity position details.
@@ -29,10 +28,7 @@ contract PositionNFT is ERC721, Ownable {
      * @notice Deploys the PositionNFT contract.
      * @param initialOwner Address that will initially own the contract.
      */
-    constructor(address initialOwner)
-        ERC721("Nebula LP Position", "NBLP")
-        Ownable(initialOwner)
-    {}
+    constructor(address initialOwner) ERC721("Nebula LP Position", "NBLP") Ownable(initialOwner) {}
 
     /**
      * @notice Mints a new PositionNFT representing a liquidity position.
@@ -43,15 +39,10 @@ contract PositionNFT is ERC721, Ownable {
      * @param upperTick The upper bound of the liquidity range.
      * @return tokenId The ID of the newly minted NFT.
      */
-    function mint(
-        address to, 
-        uint256 liquidity, 
-        int24 lowerTick, 
-        int24 upperTick
-    ) 
-        external 
-        onlyOwner 
-        returns (uint256 tokenId) 
+    function mint(address to, uint256 liquidity, int24 lowerTick, int24 upperTick)
+        external
+        onlyOwner
+        returns (uint256 tokenId)
     {
         tokenId = nextTokenId++;
         positions[tokenId] = Position(liquidity, lowerTick, upperTick);

@@ -115,12 +115,11 @@ contract LiquidityPool is ReentrancyGuard {
      * @return amountToken0 The calculated amount of token0.
      * @return amountToken1 The calculated amount of token1.
      */
-    function calculateTokenAmounts(
-        uint256 liquidity, 
-        uint256 price, 
-        int24 lowerTick, 
-        int24 upperTick
-    ) internal pure returns (uint256 amountToken0, uint256 amountToken1) {
+    function calculateTokenAmounts(uint256 liquidity, uint256 price, int24 lowerTick, int24 upperTick)
+        internal
+        pure
+        returns (uint256 amountToken0, uint256 amountToken1)
+    {
         uint256 normalizedPrice = price / MathUtils.WAD; // Normalize for tick comparison
         if (normalizedPrice <= uint256(uint24(lowerTick))) {
             amountToken0 = liquidity;
@@ -158,11 +157,11 @@ contract LiquidityPool is ReentrancyGuard {
      * @param upperTick The upper tick boundary of the position.
      * @return tokenId The unique identifier of the newly created position.
      */
-    function addLiquidity(
-        uint256 liquidity, 
-        int24 lowerTick, 
-        int24 upperTick
-    ) external nonReentrant returns (uint256 tokenId) {
+    function addLiquidity(uint256 liquidity, int24 lowerTick, int24 upperTick)
+        external
+        nonReentrant
+        returns (uint256 tokenId)
+    {
         require(liquidity > 0, "Invalid liquidity amount");
         require(lowerTick < upperTick, "lowerTick must be less than upperTick");
 
@@ -185,7 +184,7 @@ contract LiquidityPool is ReentrancyGuard {
             feeGrowthInsideToken0: feeGrowthGlobalToken0,
             feeGrowthInsideToken1: feeGrowthGlobalToken1
         });
-        
+
         // Update global total liquidity
         totalLiquidity += liquidity;
         emit LiquidityAdded(msg.sender, tokenId, liquidity, lowerTick, upperTick);
@@ -195,6 +194,7 @@ contract LiquidityPool is ReentrancyGuard {
      * @notice Removes liquidity from the pool and burns the position NFT.
      * @param tokenId The unique identifier of the liquidity position.
      */
+
     function removeLiquidity(uint256 tokenId) external nonReentrant {
         require(positionNFT.ownerOf(tokenId) == msg.sender, "Not the owner");
         Position memory pos = positions[tokenId];
@@ -205,17 +205,14 @@ contract LiquidityPool is ReentrancyGuard {
         require(price > 0, "Oracle price unavailable");
 
         // Calculate base token amounts
-        (uint256 baseAmountToken0, uint256 baseAmountToken1) = calculateTokenAmounts(
-            pos.liquidity, 
-            price, 
-            pos.lowerTick, 
-            pos.upperTick
-        );
+        (uint256 baseAmountToken0, uint256 baseAmountToken1) =
+            calculateTokenAmounts(pos.liquidity, price, pos.lowerTick, pos.upperTick);
 
         // Impermanent loss calculation
         uint256 p = (price * MathUtils.WAD) / pos.entryPrice;
         uint256 sqrtP = MathUtils.sqrt(p * MathUtils.WAD);
-        uint256 ilFactor = MathUtils.wadMul(2 * sqrtP, MathUtils.wadMul(MathUtils.WAD, MathUtils.WAD)) / (p + MathUtils.WAD);
+        uint256 ilFactor =
+            MathUtils.wadMul(2 * sqrtP, MathUtils.wadMul(MathUtils.WAD, MathUtils.WAD)) / (p + MathUtils.WAD);
 
         uint256 amountToken0 = (baseAmountToken0 * ilFactor) / MathUtils.WAD;
         uint256 amountToken1 = (baseAmountToken1 * ilFactor) / MathUtils.WAD;
@@ -255,12 +252,8 @@ contract LiquidityPool is ReentrancyGuard {
         // Update entry price based on current price
         pos.entryPrice = price;
 
-        (uint256 baseAmountToken0, uint256 baseAmountToken1) = calculateTokenAmounts(
-            liquidityAmount, 
-            price, 
-            pos.lowerTick, 
-            pos.upperTick
-        );
+        (uint256 baseAmountToken0, uint256 baseAmountToken1) =
+            calculateTokenAmounts(liquidityAmount, price, pos.lowerTick, pos.upperTick);
 
         uint256 p = (price * MathUtils.WAD) / pos.entryPrice;
         uint256 sqrtP = MathUtils.sqrt(p * MathUtils.WAD);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@nebula/contracts/governance/GovernanceToken.sol";
 
 /**
@@ -82,5 +82,4 @@ contract GovernanceTokenTest is Test {
         uint256 initialNonce = token.nonces(owner);
         assertEq(initialNonce, 0);
     }
-
 }
