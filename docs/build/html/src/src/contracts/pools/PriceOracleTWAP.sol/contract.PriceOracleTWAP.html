@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>PriceOracleTWAP &#8212; Nebular Finance  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="PositionNFT" href="../PositionNFT.sol/contract.PositionNFT.html" />
+    <link rel="prev" title="RewardSystem" href="../RewardSystem.sol/contract.RewardSystem.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="priceoracletwap">
+<h1>PriceOracleTWAP<a class="headerlink" href="#priceoracletwap" title="Link to this heading">¶</a></h1>
+<p><a class="reference external" href="https://github.com/jeffersson-abreu/nebula_contracts/blob/5cae3cf31fffc063887e8ff58da33da2f0e0820b/src/contracts/pools/PriceOracleTWAP.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+<a class="reference external" href="/src/interfaces/IPriceOracle.sol/interface.IPriceOracle.md">IPriceOracle</a>, Ownable</p>
+<p>Aggregates multiple data sources with fallback mechanisms</p>
+<p><em>Uses Chainlink, TWAP, and Band Protocol with a consensus mechanism</em></p>
+<section id="state-variables">
+<h2>State Variables<a class="headerlink" href="#state-variables" title="Link to this heading">¶</a></h2>
+<section id="oracles">
+<h3>oracles<a class="headerlink" href="#oracles" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span>OracleConfig<span class="p">[]</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>oracles<span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="lastvalidprice">
+<h3>lastValidPrice<a class="headerlink" href="#lastvalidprice" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">uint256</span><span class="w"> </span><span class="k">public </span><span class="nv">lastValidPrice</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="lastupdated">
+<h3>lastUpdated<a class="headerlink" href="#lastupdated" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">uint256</span><span class="w"> </span><span class="k">public </span><span class="nv">lastUpdated</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
+<section id="constructor">
+<h3>constructor<a class="headerlink" href="#constructor" title="Link to this heading">¶</a></h3>
+<p>Initializes the PriceOracleTWAP contract</p>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">constructor</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">initialOwner</span><span class="p">)</span><span class="w"> </span>Ownable<span class="p">(</span>initialOwner<span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Parameters</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initialOwner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">address</span></code></p></td>
+<td><p>The address that will be the initial owner of the contract</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="addoracle">
+<h3>addOracle<a class="headerlink" href="#addoracle" title="Link to this heading">¶</a></h3>
+<p>Adds a new oracle configuration</p>
+<p><em>Only callable by the contract owner</em></p>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">function</span><span class="w"> </span><span class="nv">addOracle</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">source</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">maxDeviationBps</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">heartbeat</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8</span><span class="w"> </span><span class="nv">decimals</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>onlyOwner<span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="consult">
+<h3>consult<a class="headerlink" href="#consult" title="Link to this heading">¶</a></h3>
+<p>Fetches asset price using a consensus mechanism</p>
+<p><em>Implements 2/3 majority validation for reliability</em></p>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">function</span><span class="w"> </span><span class="nv">consult</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>override<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint256</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="ispricevalid">
+<h3>_isPriceValid<a class="headerlink" href="#ispricevalid" title="Link to this heading">¶</a></h3>
+<p>Validates if a price is within an acceptable deviation range</p>
+<p><em>Ensures price fluctuations remain within a 5% deviation from the last valid price</em></p>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">function</span><span class="w"> </span><span class="nv">_isPriceValid</span><span class="p">(</span><span class="kt">uint256</span><span class="w"> </span><span class="nv">price</span><span class="p">)</span><span class="w"> </span><span class="kt">internal</span><span class="w"> </span>view<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="events">
+<h2>Events<a class="headerlink" href="#events" title="Link to this heading">¶</a></h2>
+<section id="oraclefailure">
+<h3>OracleFailure<a class="headerlink" href="#oraclefailure" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">event</span><span class="w"> </span><span class="nv">OracleFailure</span><span class="p">(</span><span class="kt">uint256</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="nv">reason</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="oracleadded">
+<h3>OracleAdded<a class="headerlink" href="#oracleadded" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">event</span><span class="w"> </span><span class="nv">OracleAdded</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">indexed</span><span class="w"> </span>source<span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">maxDeviationBps</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">heartbeat</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8</span><span class="w"> </span><span class="nv">decimals</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="structs">
+<h2>Structs<a class="headerlink" href="#structs" title="Link to this heading">¶</a></h2>
+<section id="oracleconfig">
+<h3>OracleConfig<a class="headerlink" href="#oracleconfig" title="Link to this heading">¶</a></h3>
+<div class="highlight-solidity notranslate"><div class="highlight"><pre><span></span><span class="kt">struct</span><span class="w"> </span><span class="nv">OracleConfig</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">address</span><span class="w"> </span><span class="nv">source</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">maxDeviationBps</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">heartbeat</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint8</span><span class="w"> </span><span class="nv">decimals</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Nebular Finance</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../SUMMARY.html">Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Nebula Finances Smart Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interfaces/IPriceOracle.sol/interface.IPriceOracle.html">IPriceOracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interfaces/IGovernanceToken.sol/interface.IGovernanceToken.html">IGovernanceToken</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interfaces/README.html">Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../LiquidityPoolFactory.sol/contract.LiquidityPoolFactory.html">LiquidityPoolFactory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RewardSystem.sol/contract.RewardSystem.html">RewardSystem</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PriceOracleTWAP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#state-variables">State Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#events">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structs">Structs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../PositionNFT.sol/contract.PositionNFT.html">PositionNFT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../LiquidityPool.sol/contract.LiquidityPool.html">LiquidityPool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../governance/README.html">Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../governance/GovernanceDAO.sol/contract.GovernanceDAO.html">GovernanceDAO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../governance/TokenVester.sol/contract.TokenVester.html">TokenVester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../governance/GovernanceToken.sol/contract.GovernanceToken.html">GovernanceToken</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lib/MathUtils.sol/library.MathUtils.html">MathUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lib/README.html">Contents</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../RewardSystem.sol/contract.RewardSystem.html" title="previous chapter">RewardSystem</a></li>
+      <li>Next: <a href="../PositionNFT.sol/contract.PositionNFT.html" title="next chapter">PositionNFT</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Jeffersson Abreu.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../../_sources/src/src/contracts/pools/PriceOracleTWAP.sol/contract.PriceOracleTWAP.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
