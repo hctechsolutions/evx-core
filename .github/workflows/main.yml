@@ -76,6 +76,7 @@ jobs:
           name: forge-docs
           path: docs/book/
 
+      - uses: actions/checkout@v4
       - name: Build and publish documentations
         run: |
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
