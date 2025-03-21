@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@nebula/contracts/governance/GovernanceToken.sol";
+import "@nebular/contracts/governance/GovernanceToken.sol";
 
 /**
  * @title GovernanceTokenTest
@@ -35,7 +35,7 @@ contract GovernanceTokenTest is Test {
      * @dev Tests the token name and symbol.
      */
     function testNameSymbol() public view {
-        assertEq(token.name(), "Nebula Governance Token");
+        assertEq(token.name(), "Nebular Governance Token");
         assertEq(token.symbol(), "NBL");
     }
 

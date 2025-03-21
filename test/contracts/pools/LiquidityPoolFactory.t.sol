@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {LiquidityPoolFactory} from "@nebula/contracts/pools/LiquidityPoolFactory.sol";
-import {LiquidityPool} from "@nebula/contracts/pools/LiquidityPool.sol";
+import {LiquidityPoolFactory} from "@nebular/contracts/pools/LiquidityPoolFactory.sol";
+import {LiquidityPool} from "@nebular/contracts/pools/LiquidityPool.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IPriceOracle} from "@nebula/interfaces/IPriceOracle.sol";
+import {IPriceOracle} from "@nebular/interfaces/IPriceOracle.sol";
 
 /**
  * @title DummyPriceOracle

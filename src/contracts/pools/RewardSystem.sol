@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@nebula/contracts/pools/PositionNFT.sol";
-import "@nebula/interfaces/IGovernanceToken.sol";
+import "@nebular/contracts/pools/PositionNFT.sol";
+import "@nebular/interfaces/IGovernanceToken.sol";
 
 contract RewardSystem {
     IGovernanceToken public rewardToken;

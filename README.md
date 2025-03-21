@@ -1,6 +1,6 @@
-# Nebula Finances Smart Contracts
+# Nebular Finances Smart Contracts
 
-This repository contains the implementation of the smart contracts that comprise the Nebula Finances system, covering governance, liquidity, rewards, vesting, and price oracle modules. The architecture leverages OpenZeppelin standards and libraries, with integrations using Chainlink and governance mechanisms inspired by OpenZeppelin's Governor.
+This repository contains the implementation of the smart contracts that comprise the Nebular Finances system, covering governance, liquidity, rewards, vesting, and price oracle modules. The architecture leverages OpenZeppelin standards and libraries, with integrations using Chainlink and governance mechanisms inspired by OpenZeppelin's Governor.
 
 ---
 

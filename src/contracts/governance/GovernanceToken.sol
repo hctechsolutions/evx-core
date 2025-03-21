@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@nebula/interfaces/IGovernanceToken.sol";
+import "@nebular/interfaces/IGovernanceToken.sol";
 
 /**
  * @title GovernanceToken
@@ -14,12 +14,12 @@ import "@nebula/interfaces/IGovernanceToken.sol";
  */
 contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernanceToken {
     /**
-     * @notice Initializes the Nebula Governance Token
+     * @notice Initializes the Nebular Governance Token
      * @param initialOwner Address that will receive the initial supply
      */
     constructor(address initialOwner)
-        ERC20("Nebula Governance Token", "NBL")
-        ERC20Permit("Nebula Governance Token")
+        ERC20("Nebular Governance Token", "NBL")
+        ERC20Permit("Nebular Governance Token")
         Ownable(initialOwner)
     {
         _mint(initialOwner, 100_000_000 * 10 ** decimals());

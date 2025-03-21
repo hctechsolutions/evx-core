@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@nebula/contracts/governance/GovernanceDAO.sol";
-import "@nebula/contracts/governance/GovernanceToken.sol";
+import "@nebular/contracts/governance/GovernanceDAO.sol";
+import "@nebular/contracts/governance/GovernanceToken.sol";
 import "@openzeppelin/contracts/governance/TimelockController.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";

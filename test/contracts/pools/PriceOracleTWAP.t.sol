@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@nebula/interfaces/IPriceOracle.sol";
-import "@nebula/contracts/pools/PriceOracleTWAP.sol";
+import "@nebular/interfaces/IPriceOracle.sol";
+import "@nebular/contracts/pools/PriceOracleTWAP.sol";
 
 /**
  * @title MockOracle

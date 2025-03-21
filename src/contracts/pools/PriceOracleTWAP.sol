@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import "@nebula/interfaces/IPriceOracle.sol";
+import "@nebular/interfaces/IPriceOracle.sol";
 
 /**
  * @title PriceOracleTWAP

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingOverridable.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import "@nebula/interfaces/IGovernanceToken.sol";
+import "@nebular/interfaces/IGovernanceToken.sol";
 
 /**
  * @title GovernanceDAO

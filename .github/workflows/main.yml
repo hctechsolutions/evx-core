@@ -1,4 +1,4 @@
-name: Nebula CI/CD
+name: Nebular CI/CD
 
 on:
   push:
