@@ -1,5 +1,5 @@
 # IGovernanceToken
-[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/713b150e780334d0bd03d6604842282ffc694e40/src/interfaces/IGovernanceToken.sol)
+[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/ec613b8e4edfc995d98c4c7aaaac9edf0c72aed1/src/interfaces/IGovernanceToken.sol)
 
 Provides voting power tracking for governance systems
 

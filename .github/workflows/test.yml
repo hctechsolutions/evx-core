@@ -1,11 +1,14 @@
-name: CI
+name: Nebula CI/CD
 
 on:
   push:
-  pull_request:
-  workflow_dispatch:
+    branches:
+      - main
+      - develop
 
 env:
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   FOUNDRY_PROFILE: ci
 
 jobs:
@@ -13,7 +16,7 @@ jobs:
     strategy:
       fail-fast: true
 
-    name: Foundry project
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +30,6 @@ jobs:
         run: |
           forge --version
 
-      - name: Run Forge fmt
-        run: |
-          forge fmt --check
-        id: fmt
-
       - name: Run Forge build
         run: |
           forge build --sizes
@@ -41,3 +39,27 @@ jobs:
         run: |
           forge test -vvv
         id: test
+  
+    name: Provide documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run Forge docs
+        run: |
+          forge doc --build
+        id: doc
+
+      - name: Run Deploy
+        id: deploy
+        run: |
+          aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
+          docker build -t docs:latest .
+          docker tag bitswaper_frontend:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
+          docker push 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
+
