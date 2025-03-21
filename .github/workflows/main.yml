@@ -13,9 +13,6 @@ env:
 
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Run tests
     runs-on: ubuntu-latest
     steps:
@@ -27,21 +24,20 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Show Forge version
-        run: |
-          forge --version
+        run: forge --version
 
       - name: Run Forge build
-        run: |
-          forge build --sizes
+        run: forge build --sizes
         id: build
 
       - name: Run Forge tests
-        run: |
-          forge test -vvv
+        run: forge test -vvv
         id: test
-  
+
+  docs:
     name: Provide documentation
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,15 +47,29 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run Forge docs
-        run: |
-          forge doc --build
+        run: forge doc --build
         id: doc
 
-      - name: Run Deploy
-        id: deploy
+      - name: Archive documentation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: forge-docs
+          path: docs/book/
+  
+  deploy:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: docs
+    steps:
+      - name: Download documentation artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: forge-docs
+          path: docs/book/
+
+      - name: Build and publish documentations
         run: |
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
           docker build -t docs:latest .
-          docker tag bitswaper_frontend:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
+          docker tag docs:latest 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
           docker push 905418344172.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/docs:latest
-
