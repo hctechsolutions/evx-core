@@ -3,24 +3,24 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@nebula/interfaces/IGovernanceToken.sol";
 
 
 /**
- * @title NBLToken
+ * @title GovernanceToken
  * @notice Governance token with voting and permit capabilities
  * @dev Extends OpenZeppelin's ERC20, ERC20Votes, ERC20Permit, and Ownable
  */
-contract NBLToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernanceToken {
+contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernanceToken {
     /**
-     * @notice Initializes the NBL Governance Token
+     * @notice Initializes the Nebula Governance Token
      * @param initialOwner Address that will receive the initial supply
      */
     constructor(address initialOwner)
-        ERC20("NBL Governance Token", "NBL")
-        ERC20Permit("NBL Governance Token")
+        ERC20("Nebula Governance Token", "NBL")
+        ERC20Permit("Nebula Governance Token")
         Ownable(initialOwner)
     {
         _mint(initialOwner, 100_000_000 * 10 ** decimals());

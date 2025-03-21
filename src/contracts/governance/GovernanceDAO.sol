@@ -12,6 +12,12 @@ import "@nebula/interfaces/IGovernanceToken.sol";
 /**
  * @title GovernanceDAO
  * @notice A decentralized governance contract that manages protocol upgrades and parameter changes.
+ * @dev This contract extends multiple OpenZeppelin governance modules to enable advanced governance mechanisms.
+ *      - `Governor`: Base contract for governance.
+ *      - `GovernorTimelockControl`: Adds timelock functionality to enforce execution delays.
+ *      - `GovernorVotes`: Integrates voting based on tokenized voting power.
+ *      - `GovernorCountingOverridable`: Allows flexible vote counting strategies.
+ *      - `GovernorVotesQuorumFraction`: Defines the quorum as a fraction of total voting supply.
  */
 contract GovernanceDAO is
     Governor, 
@@ -20,6 +26,7 @@ contract GovernanceDAO is
     GovernorCountingOverridable, 
     GovernorVotesQuorumFraction 
 {
+    /// @notice Immutable reference to the governance token used for voting.
     IGovernanceToken public immutable governanceToken;
 
     /**

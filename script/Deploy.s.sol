@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
-import { NBLToken } from "@nebula/contracts/Token.sol";
-import { TokenVester } from "@nebula/contracts/TokenVester.sol";
+import { GovernanceToken } from "@nebula/contracts/governance/GovernanceToken.sol";
+import { TokenVester } from "@nebula/contracts/governance/TokenVester.sol";
 import "forge-std/console.sol";
 
 contract DeployNBL is Script {
@@ -26,7 +26,7 @@ contract DeployNBL is Script {
 
         // 1. Deploy the NBL Token
         address deployerAddress = vm.addr(deployerPrivateKey);
-        NBLToken nbl = new NBLToken(deployerAddress); // Deployer is the initialHolder
+        GovernanceToken nbl = new GovernanceToken(deployerAddress); // Deployer is the initialHolder
 
         // 2. Deploy the Vesting contracts
         TokenVester liquidityVester = new TokenVester(
