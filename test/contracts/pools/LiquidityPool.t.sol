@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@nebula/contracts/pools/LiquidityPool.sol";
-import "@nebula/interfaces/IPriceOracle.sol";
-import "@nebula/lib/MathUtils.sol";
+import "@nebular/contracts/pools/LiquidityPool.sol";
+import "@nebular/interfaces/IPriceOracle.sol";
+import "@nebular/lib/MathUtils.sol";
 import "forge-std/console.sol";
 
 /**

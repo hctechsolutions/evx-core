@@ -2,13 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-import {GovernanceToken} from "@nebula/contracts/governance/GovernanceToken.sol";
-import {TokenVester} from "@nebula/contracts/governance/TokenVester.sol";
+import {GovernanceToken} from "@nebular/contracts/governance/GovernanceToken.sol";
+import {TokenVester} from "@nebular/contracts/governance/TokenVester.sol";
 import "forge-std/console.sol";
 
 /**
  * @title DeployNBL
- * @notice A deployment script for the Nebula (NBL) governance token and its associated vesting contracts.
+ * @notice A deployment script for the Nebular (NBL) governance token and its associated vesting contracts.
  * @dev This script deploys the governance token and multiple vesting contracts, 
  *      and then distributes the tokens accordingly.
  */

@@ -28,7 +28,7 @@ contract PositionNFT is ERC721, Ownable {
      * @notice Deploys the PositionNFT contract.
      * @param initialOwner Address that will initially own the contract.
      */
-    constructor(address initialOwner) ERC721("Nebula LP Position", "NBLP") Ownable(initialOwner) {}
+    constructor(address initialOwner) ERC721("Nebular LP Position", "NBLP") Ownable(initialOwner) {}
 
     /**
      * @notice Mints a new PositionNFT representing a liquidity position.

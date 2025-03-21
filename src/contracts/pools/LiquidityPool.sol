@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@nebula/interfaces/IPriceOracle.sol";
-import "@nebula/contracts/pools/PositionNFT.sol";
-import "@nebula/lib/MathUtils.sol";
+import "@nebular/interfaces/IPriceOracle.sol";
+import "@nebular/contracts/pools/PositionNFT.sol";
+import "@nebular/lib/MathUtils.sol";
 
 /**
  * @title LiquidityPool

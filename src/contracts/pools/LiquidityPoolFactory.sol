@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@nebula/contracts/pools/LiquidityPool.sol";
-import "@nebula/contracts/pools/PositionNFT.sol";
+import "@nebular/contracts/pools/LiquidityPool.sol";
+import "@nebular/contracts/pools/PositionNFT.sol";
 
 /**
  * @title LiquidityPoolFactory
