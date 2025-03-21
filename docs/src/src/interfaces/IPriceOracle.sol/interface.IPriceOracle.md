@@ -1,5 +1,5 @@
 # IPriceOracle
-[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/5cae3cf31fffc063887e8ff58da33da2f0e0820b/src/interfaces/IPriceOracle.sol)
+[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/713b150e780334d0bd03d6604842282ffc694e40/src/interfaces/IPriceOracle.sol)
 
 Provides asset price data with redundancy and validation
 
