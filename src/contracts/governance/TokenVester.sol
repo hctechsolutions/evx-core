@@ -42,7 +42,7 @@ contract TokenVester is Ownable {
     ) Ownable(_owner) {
         require(_totalAllocation > _initialRelease, "Invalid allocation");
         require(_vestingDuration > 0, "Vesting duration must be greater than 0");
-        
+
         token = _token;
         start = block.timestamp;
         cliffDuration = _cliffDuration;

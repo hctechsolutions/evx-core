@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
 
-
 /**
  * @title MathUtils
  * @dev Library for common mathematical operations used in DeFi protocols.

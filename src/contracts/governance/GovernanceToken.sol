@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@nebula/interfaces/IGovernanceToken.sol";
 
-
 /**
  * @title GovernanceToken
  * @notice Governance token with voting and permit capabilities
@@ -30,11 +29,7 @@ contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernance
      * @notice Internal function to handle token transfers
      * @dev Ensures proper update of voting power and nonces
      */
-    function _update(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20, ERC20Votes) {
+    function _update(address from, address to, uint256 amount) internal override(ERC20, ERC20Votes) {
         super._update(from, to, amount);
     }
 
@@ -42,12 +37,7 @@ contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernance
      * @notice Returns the number of permits (nonces) used by an address
      * @param owner Address of the token holder
      */
-    function nonces(address owner)
-        public
-        view
-        override(ERC20Permit, Nonces)
-        returns (uint256)
-    {
+    function nonces(address owner) public view override(ERC20Permit, Nonces) returns (uint256) {
         return super.nonces(owner);
     }
 
@@ -56,11 +46,11 @@ contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernance
      * @param account Address of the token holder
      * @param blockNumber Block number for historical voting power lookup
      */
-    function getPastVotes(address account, uint256 blockNumber) 
-        public 
-        view 
+    function getPastVotes(address account, uint256 blockNumber)
+        public
+        view
         override(IGovernanceToken, Votes)
-        returns (uint256) 
+        returns (uint256)
     {
         return super.getPastVotes(account, blockNumber);
     }

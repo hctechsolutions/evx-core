@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import {LiquidityPoolFactory} from "@nebula/contracts/pools/LiquidityPoolFactory.sol";
 import {LiquidityPool} from "@nebula/contracts/pools/LiquidityPool.sol";
-import {IPriceOracle} from "@nebula/interfaces/IPriceOracle.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IPriceOracle} from "@nebula/interfaces/IPriceOracle.sol";
 
 /**
  * @title DummyPriceOracle
@@ -19,7 +19,7 @@ contract DummyPriceOracle is IPriceOracle {
      * @dev Returns the dummy price.
      * @return The dummy price (1e18).
      */
-    function consult() external override view returns (uint256) {
+    function consult() external view override returns (uint256) {
         return _price;
     }
 
@@ -74,11 +74,7 @@ contract LiquidityPoolFactoryTest is Test {
      */
     function testCreateLiquidityPool() public {
         // Create a new LiquidityPool through the factory
-        LiquidityPool pool = factory.createLiquidityPool(
-            address(token0),
-            address(token1),
-            address(oracle)
-        );
+        LiquidityPool pool = factory.createLiquidityPool(address(token0), address(token1), address(oracle));
 
         // Verify if the parameters of the pool are correctly set
         assertEq(address(pool.token0()), address(token0), "Token0 address mismatch");
@@ -100,11 +96,7 @@ contract LiquidityPoolFactoryTest is Test {
         factory.createLiquidityPool(address(token0), address(0), address(oracle));
 
         vm.expectRevert("Token addresses must be different");
-        factory.createLiquidityPool(
-            address(token0),
-            address(token0),
-            address(oracle)
-        );
+        factory.createLiquidityPool(address(token0), address(token0), address(oracle));
     }
 
     /**

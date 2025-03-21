@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { GovernanceToken } from "@nebula/contracts/governance/GovernanceToken.sol";
-import { TokenVester } from "@nebula/contracts/governance/TokenVester.sol";
+import {Script} from "forge-std/Script.sol";
+import {GovernanceToken} from "@nebula/contracts/governance/GovernanceToken.sol";
+import {TokenVester} from "@nebula/contracts/governance/TokenVester.sol";
 import "forge-std/console.sol";
 
 contract DeployNBL is Script {
@@ -31,37 +31,37 @@ contract DeployNBL is Script {
         // 2. Deploy the Vesting contracts
         TokenVester liquidityVester = new TokenVester(
             nbl,
-            0,              // Cliff: 0 (no waiting period)
-            0,              // Initial release: 0
-            40_000_000e18,  // 40M tokens
-            4 * 365 days,   // 4 years
+            0, // Cliff: 0 (no waiting period)
+            0, // Initial release: 0
+            40_000_000e18, // 40M tokens
+            4 * 365 days, // 4 years
             TREASURY_WALLET // Owner (e.g., DAO)
         );
 
         TokenVester teamVester = new TokenVester(
             nbl,
-            1 * 365 days,   // Cliff: 1 year
-            0,              // Initial release: 0
-            15_000_000e18,  // 15M tokens
-            3 * 365 days,   // 3 years
+            1 * 365 days, // Cliff: 1 year
+            0, // Initial release: 0
+            15_000_000e18, // 15M tokens
+            3 * 365 days, // 3 years
             TEAM_WALLET
         );
 
         TokenVester seedVester = new TokenVester(
             nbl,
-            180 days,       // Cliff: 6 months
-            0,              // Initial release: 0
-            10_000_000e18,  // 10M tokens
-            2 * 365 days,   // 2 years
+            180 days, // Cliff: 6 months
+            0, // Initial release: 0
+            10_000_000e18, // 10M tokens
+            2 * 365 days, // 2 years
             SEED_WALLET
         );
 
         TokenVester marketingVester = new TokenVester(
             nbl,
-            0,              // Cliff: 0
-            3_000_000e18,   // 3M tokens initially released (30%)
-            10_000_000e18,  // Total: 10M tokens
-            2 * 365 days,   // 2 years
+            0, // Cliff: 0
+            3_000_000e18, // 3M tokens initially released (30%)
+            10_000_000e18, // Total: 10M tokens
+            2 * 365 days, // 2 years
             MARKETING_WALLET
         );
 
@@ -71,7 +71,7 @@ contract DeployNBL is Script {
         nbl.transfer(address(seedVester), 10_000_000e18);
         nbl.transfer(address(marketingVester), 10_000_000e18);
         nbl.transfer(TREASURY_WALLET, 20_000_000e18); // Treasury
-        nbl.transfer(PARTNERS_WALLET, 5_000_000e18);  // Partners
+        nbl.transfer(PARTNERS_WALLET, 5_000_000e18); // Partners
 
         vm.stopBroadcast();
     }

@@ -29,9 +29,9 @@ contract LiquidityPoolFactory {
      * @param _oracle The address of the price oracle for the pool.
      * @return pool The address of the newly created LiquidityPool.
      */
-    function createLiquidityPool(address _token0, address _token1, address _oracle) 
-        external 
-        returns (LiquidityPool pool) 
+    function createLiquidityPool(address _token0, address _token1, address _oracle)
+        external
+        returns (LiquidityPool pool)
     {
         require(address(_token0) != address(_token1), "Token addresses must be different");
         pool = new LiquidityPool(_token0, _token1, IPriceOracle(_oracle));

@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock Token", "MOCK") {}
-    
+
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
@@ -34,19 +34,12 @@ contract TokenVesterTest is Test {
      */
     function setUp() public {
         vm.startPrank(owner);
-        
+
         token = new MockERC20();
-        vesting = new TokenVester(
-            token,
-            CLIFF_DURATION,
-            INITIAL_RELEASE,
-            TOTAL_ALLOCATION,
-            VESTING_DURATION,
-            owner
-        );
+        vesting = new TokenVester(token, CLIFF_DURATION, INITIAL_RELEASE, TOTAL_ALLOCATION, VESTING_DURATION, owner);
 
         token.mint(address(vesting), TOTAL_ALLOCATION);
-        
+
         vm.stopPrank();
     }
 
@@ -84,12 +77,10 @@ contract TokenVesterTest is Test {
     function testDuringVesting() public {
         uint256 halfVesting = CLIFF_DURATION + (VESTING_DURATION / 2);
         vm.warp(vesting.start() + halfVesting);
-        
-        uint256 expected = INITIAL_RELEASE + 
-            (TOTAL_ALLOCATION - INITIAL_RELEASE) * 
-            (halfVesting - CLIFF_DURATION) / 
-            VESTING_DURATION;
-            
+
+        uint256 expected =
+            INITIAL_RELEASE + (TOTAL_ALLOCATION - INITIAL_RELEASE) * (halfVesting - CLIFF_DURATION) / VESTING_DURATION;
+
         assertEq(vesting.calculateVestedAmount(), expected);
     }
 
@@ -106,11 +97,11 @@ contract TokenVesterTest is Test {
      */
     function testRelease() public {
         vm.warp(vesting.start() + CLIFF_DURATION + VESTING_DURATION);
-        
+
         uint256 ownerBalanceBefore = token.balanceOf(owner);
         vm.prank(owner);
         vesting.release();
-        
+
         assertEq(token.balanceOf(owner), ownerBalanceBefore + TOTAL_ALLOCATION);
         assertEq(vesting.released(), TOTAL_ALLOCATION);
     }
@@ -122,16 +113,14 @@ contract TokenVesterTest is Test {
         vm.warp(vesting.start() + CLIFF_DURATION + (VESTING_DURATION / 2));
         vm.prank(owner);
         vesting.release();
-        
-        uint256 firstRelease = INITIAL_RELEASE + 
-            (TOTAL_ALLOCATION - INITIAL_RELEASE) * 
-            (VESTING_DURATION / 2) / 
-            VESTING_DURATION;
+
+        uint256 firstRelease =
+            INITIAL_RELEASE + (TOTAL_ALLOCATION - INITIAL_RELEASE) * (VESTING_DURATION / 2) / VESTING_DURATION;
 
         vm.warp(vesting.start() + CLIFF_DURATION + VESTING_DURATION);
         vm.prank(owner);
         vesting.release();
-        
+
         assertEq(vesting.released(), TOTAL_ALLOCATION);
         assertEq(token.balanceOf(owner), firstRelease + (TOTAL_ALLOCATION - firstRelease));
     }
@@ -153,7 +142,7 @@ contract TokenVesterTest is Test {
         vm.warp(vesting.start() + CLIFF_DURATION);
         vm.prank(owner);
         vesting.release();
-        
+
         vm.prank(owner);
         vm.expectRevert("No tokens to release");
         vesting.release();

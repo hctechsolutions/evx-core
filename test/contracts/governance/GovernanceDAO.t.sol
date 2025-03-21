@@ -16,23 +16,18 @@ contract GovernanceDAOTest is Test {
     GovernanceDAO public dao;
     GovernanceToken public token;
     TimelockController public timelock;
-    
+
     address public constant ADMIN = address(1);
     address public constant VOTER1 = address(2);
     address public constant VOTER2 = address(3);
     address public constant OWNER = address(4);
-    
+
     uint256 public constant VOTING_DELAY = 5760;
     uint256 public constant VOTING_PERIOD = 40320;
     uint256 public constant QUORUM_PERCENT = 51; // 51%
 
     event ProposalCreated(
-        uint256 proposalId,
-        address proposer,
-        address[] targets,
-        uint256[] values,
-        bytes[] calldatas,
-        string description
+        uint256 proposalId, address proposer, address[] targets, uint256[] values, bytes[] calldatas, string description
     );
 
     /**
@@ -42,7 +37,7 @@ contract GovernanceDAOTest is Test {
     function setUp() public {
         // Deploy Governance Token
         token = new GovernanceToken(ADMIN);
-        
+
         // Transfer tokens from ADMIN to voters
         vm.startPrank(ADMIN);
         token.transfer(VOTER1, 40_000_000e18);
@@ -64,7 +59,7 @@ contract GovernanceDAOTest is Test {
 
         // Deploy DAO
         dao = new GovernanceDAO(token, timelock);
-        
+
         // Set timelock roles using ADMIN
         vm.startPrank(ADMIN);
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(dao));
@@ -94,18 +89,18 @@ contract GovernanceDAOTest is Test {
         calldatas[0] = abi.encodeWithSignature("dummy()");
         string memory description = "Test Proposal";
         bytes32 descriptionHash = keccak256(bytes(description));
-        
+
         // Create proposal as VOTER1
         vm.prank(VOTER1);
         uint256 proposalId = dao.propose(targets, values, calldatas, description);
 
         // Check initial state (Pending)
         assertEq(uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Pending));
-        
+
         // Advance to voting period
         vm.roll(block.number + VOTING_DELAY + 1);
         assertEq(uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Active));
-        
+
         // Cast votes
         vm.prank(VOTER1);
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.For));
@@ -114,15 +109,12 @@ contract GovernanceDAOTest is Test {
 
         // Verify vote count
         (, uint256 forVotes,) = dao.proposalVotes(proposalId);
-        assertEq(
-            forVotes, 
-            token.getPastVotes(VOTER1, block.number - 1) + token.getPastVotes(VOTER2, block.number - 1)
-        );
+        assertEq(forVotes, token.getPastVotes(VOTER1, block.number - 1) + token.getPastVotes(VOTER2, block.number - 1));
 
         // Finalize voting
         vm.roll(block.number + VOTING_PERIOD + 1);
         assertEq(uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded));
-        
+
         // Queue the proposal
         dao.queue(targets, values, calldatas, descriptionHash);
         assertEq(uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Queued), "Should be Queued");
@@ -144,28 +136,26 @@ contract GovernanceDAOTest is Test {
         calldatas[0] = abi.encodeWithSignature("dummy()");
         string memory description = "Test Proposal";
         bytes32 descriptionHash = keccak256(bytes(description));
-        
+
         // Create proposal as VOTER1
         vm.prank(VOTER1);
         uint256 proposalId = dao.propose(targets, values, calldatas, description);
-        
+
         // Advance to voting period
         vm.roll(block.number + VOTING_DELAY + 1);
-        
+
         // Cast votes
         vm.prank(VOTER1);
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.For));
         vm.prank(VOTER2);
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.For));
-        
+
         // Finalize voting
         vm.roll(block.number + VOTING_PERIOD + 1);
         assertEq(
-            uint256(dao.state(proposalId)), 
-            uint256(IGovernor.ProposalState.Succeeded),
-            "Proposal should be Succeeded"
+            uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded), "Proposal should be Succeeded"
         );
-        
+
         // Attempt to execute without queueing
         vm.expectRevert();
         dao.execute(targets, values, calldatas, descriptionHash);
@@ -191,7 +181,7 @@ contract GovernanceDAOTest is Test {
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("dummy()");
         string memory description = "Test Proposal";
-        
+
         vm.prank(VOTER1);
         uint256 proposalId = dao.propose(targets, values, calldatas, description);
         vm.roll(block.number + VOTING_DELAY + 1);
@@ -226,20 +216,24 @@ contract GovernanceDAOTest is Test {
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("dummy()");
-        
+
         // Create proposal as VOTER1
         vm.prank(VOTER1);
         uint256 proposalId = dao.propose(targets, values, calldatas, "Test Proposal");
-        
+
         // Advance to voting period
         vm.roll(block.number + VOTING_DELAY + 1);
-        
+
         // Cast vote only from VOTER1 (insufficient quorum)
         vm.prank(VOTER1);
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.For));
-        
+
         // Finalize voting
         vm.roll(block.number + VOTING_PERIOD + 1);
-        assertEq(uint256(dao.state(proposalId)), uint256(IGovernor.ProposalState.Defeated), "Should fail due to insufficient quorum");
+        assertEq(
+            uint256(dao.state(proposalId)),
+            uint256(IGovernor.ProposalState.Defeated),
+            "Should fail due to insufficient quorum"
+        );
     }
 }
