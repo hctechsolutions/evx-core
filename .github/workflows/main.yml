@@ -12,6 +12,28 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
+  check:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Show Forge version
+        run: forge --version
+
+      - name: Run Forge build
+        run: forge build
+        id: build
+
+      - name: Run Forge tests
+        run: forge test
+        id: test
+
   docs:
     name: Provide documentation
     runs-on: ubuntu-latest
