@@ -27,11 +27,11 @@ jobs:
         run: forge --version
 
       - name: Run Forge build
-        run: forge build --sizes
+        run: forge build
         id: build
 
       - name: Run Forge tests
-        run: forge test -vvv
+        run: forge test
         id: test
 
   docs:
