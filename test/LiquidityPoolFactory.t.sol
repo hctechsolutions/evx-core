@@ -20,7 +20,7 @@ contract DummyPriceOracle is IPriceOracle {
      * @dev Returns the dummy price.
      * @return The dummy price (1e18).
      */
-    function consult() external override returns (uint256) {
+    function consult() external override view returns (uint256) {
         return _price;
     }
 
@@ -92,13 +92,20 @@ contract LiquidityPoolFactoryTest is Test {
     }
 
     /**
-     * @dev Tests that creation reverts if one of the token addresses is invalid.
+     * @dev Tests that creation reverts if one of the token addresses is invalid or tokens are the same.
      */
     function testRevertOnInvalidTokenAddresses() public {
         vm.expectRevert("Invalid token addresses");
         factory.createLiquidityPool(address(0), address(token1), address(oracle));
         vm.expectRevert("Invalid token addresses");
         factory.createLiquidityPool(address(token0), address(0), address(oracle));
+
+        vm.expectRevert("Token addresses must be different");
+        factory.createLiquidityPool(
+            address(token0),
+            address(token0),
+            address(oracle)
+        );
     }
 
     /**
