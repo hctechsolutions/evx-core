@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
-import { GovernanceToken } from "@nebula/contracts/GovernanceToken.sol";
-import { TokenVester } from "@nebula/contracts/TokenVester.sol";
+import { GovernanceToken } from "@nebula/contracts/governance/GovernanceToken.sol";
+import { TokenVester } from "@nebula/contracts/governance/TokenVester.sol";
 import "forge-std/console.sol";
 
 contract DeployNBL is Script {

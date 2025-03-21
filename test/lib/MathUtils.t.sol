@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@nebula/utils/MathUtils.sol";
+import "@nebula/lib/MathUtils.sol";
 
 /**
  * @title MathUtilsTest

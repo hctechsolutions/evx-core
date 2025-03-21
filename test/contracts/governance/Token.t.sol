@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@nebula/contracts/GovernanceToken.sol";
+import "@nebula/contracts/governance/GovernanceToken.sol";
 
 /**
  * @title GovernanceTokenTest
@@ -25,7 +25,7 @@ contract GovernanceTokenTest is Test {
     /**
      * @dev Tests that the initial supply is correctly minted to the owner.
      */
-    function testInitialSupply() public {
+    function testInitialSupply() public view {
         uint256 expectedSupply = 100_000_000 * 10 ** token.decimals();
         assertEq(token.totalSupply(), expectedSupply);
         assertEq(token.balanceOf(owner), expectedSupply);
@@ -34,7 +34,7 @@ contract GovernanceTokenTest is Test {
     /**
      * @dev Tests the token name and symbol.
      */
-    function testNameSymbol() public {
+    function testNameSymbol() public view {
         assertEq(token.name(), "Nebula Governance Token");
         assertEq(token.symbol(), "NBL");
     }
@@ -60,7 +60,6 @@ contract GovernanceTokenTest is Test {
 
         uint256 initialOwnerBalance = token.balanceOf(owner);
         uint256 initialUserBalance = token.balanceOf(user);
-        uint256 initialOwnerVotes = token.getVotes(owner);
 
         uint256 transferAmount = 1_000 * 10 ** token.decimals();
         vm.prank(owner);
@@ -79,7 +78,7 @@ contract GovernanceTokenTest is Test {
     /**
      * @dev Tests that the nonce for permit functionality increments.
      */
-    function testNonces() public {
+    function testNonces() public view {
         uint256 initialNonce = token.nonces(owner);
         assertEq(initialNonce, 0);
     }

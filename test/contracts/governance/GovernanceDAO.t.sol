@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@nebula/contracts/GovernanceDAO.sol";
-import "@nebula/contracts/GovernanceToken.sol";
+import "@nebula/contracts/governance/GovernanceDAO.sol";
+import "@nebula/contracts/governance/GovernanceToken.sol";
 import "@openzeppelin/contracts/governance/TimelockController.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
@@ -113,7 +113,7 @@ contract GovernanceDAOTest is Test {
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.For));
 
         // Verify vote count
-        (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = dao.proposalVotes(proposalId);
+        (, uint256 forVotes,) = dao.proposalVotes(proposalId);
         assertEq(
             forVotes, 
             token.getPastVotes(VOTER1, block.number - 1) + token.getPastVotes(VOTER2, block.number - 1)
@@ -202,7 +202,7 @@ contract GovernanceDAOTest is Test {
         vm.prank(VOTER2);
         dao.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.Against));
 
-        (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = dao.proposalVotes(proposalId);
+        (uint256 againstVotes, uint256 forVotes,) = dao.proposalVotes(proposalId);
         assertEq(forVotes, token.getPastVotes(VOTER1, block.number - 1), "Incorrect For votes");
         assertEq(againstVotes, token.getPastVotes(VOTER2, block.number - 1), "Incorrect Against votes");
     }
