@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/console.sol";
-
 /**
  * @title MathUtils
  * @dev Library for common mathematical operations used in DeFi protocols.
@@ -51,5 +49,24 @@ library MathUtils {
             z = (x / z + z) / 2;
         }
         return y;
+    }
+
+    /**
+     * @notice Normalizes a given value to 18 decimal places (WAD).
+     * @dev Scales the input value to maintain consistent precision in calculations.
+     * @param value The raw price value from an oracle (e.g., Chainlink).
+     * @param decimals The current decimal places of `value`.
+     * @return wadValue The value scaled to 18 decimals (WAD).
+     */
+    function toWad(uint256 value, uint8 decimals) internal pure returns (uint256 wadValue) {
+        if (decimals > 18) {
+            return value / (10 ** (decimals - 18));
+        } 
+        
+        if (decimals < 18) {
+            return value * (10 ** (18 - decimals));
+        }
+        
+        return value;
     }
 }

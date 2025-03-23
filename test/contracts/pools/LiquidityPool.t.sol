@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@nebular/contracts/pools/LiquidityPool.sol";
 import "@nebular/interfaces/IPriceOracle.sol";
 import "@nebular/lib/MathUtils.sol";
-import "forge-std/console.sol";
 
 /**
  * @title LiquidityPoolTest

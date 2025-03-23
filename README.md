@@ -6,39 +6,6 @@ This repository contains the implementation of the smart contracts that comprise
 
 ---
 
-## Overview
-
-The application is divided into several key modules:
-
-- **Governance**  
-  - **GovernanceDAO**: Manages proposals, voting, and the execution of critical updates and parameters.  
-  - **GovernanceToken**: A governance token with voting and permit capabilities, used for delegating votes and participating in decision-making.
-
-- **Liquidity**  
-  - **LiquidityPool**: An Automated Market Maker (AMM) that enables token swaps and liquidity provision by users.  
-  - **PriceOracleTWAP**: A price oracle that aggregates multiple data sources with fallback and consensus mechanisms to provide a reliable price for the AMM.
-
-- **Rewards**  
-  - **RewardSystem**: Distributes rewards based on liquidity snapshots and multipliers (boosters).  
-  - **TokenVester**: Manages the gradual release of tokens according to a vesting schedule with a cliff and progressive release.
-
----
-
-## Architecture and Interactions
-
-The system is composed of different modules that interact with each other:
-
-- **Governance**:  
-  The DAO creates and manages proposals, controls the execution of updates, and sets critical parameters. The GovernanceToken is used to delegate votes and participate in governance decisions.
-
-- **Liquidity**:  
-  The LiquidityPool allows users to provide liquidity and perform swaps, generating fees that may be redistributed via governance. The PriceOracleTWAP provides the necessary price data for pool operations.
-
-- **Rewards**:  
-  The RewardSystem calculates and distributes rewards based on snapshots of the LiquidityPool. The TokenVester manages the token release according to a defined vesting schedule.
-
----
-
 ## Prerequisites
 
 - [Foundry](https://getfoundry.sh/) – a tool for developing, testing, and deploying Solidity contracts  
