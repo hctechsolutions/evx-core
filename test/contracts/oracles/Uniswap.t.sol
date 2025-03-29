@@ -6,12 +6,12 @@ import "@nebular/contracts/oracles/Uniswap.sol";
 import "@nebular/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@nebular/lib/MathUtils.sol";
 
 /**
  * @title UniswapV3PoolMock
- * @notice Mock contract for the Uniswap V3 Pool to be used in unit tests.
- * @dev This contract simulates the behavior of a Uniswap V3 Pool for testing purposes.
+ * @notice Mock contract for Uniswap V3 Pool used in unit tests.
+ * @dev Simulates basic Uniswap V3 Pool behavior.
  */
 contract UniswapV3PoolMock is IUniswapV3Pool {
     address private _token0;
@@ -21,15 +21,6 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
     uint128 private _liquidity;
     uint24 private _fee;
 
-    /**
-     * @notice Initializes the mock Uniswap V3 pool with given parameters.
-     * @param token0_ Address of the first token in the pool.
-     * @param token1_ Address of the second token in the pool.
-     * @param initialPrice Initial square root price (X96 format).
-     * @param initialTick Initial tick value.
-     * @param initialLiquidity Initial liquidity value.
-     * @param initialFee Trading fee in basis points.
-     */
     constructor(
         address token0_,
         address token1_,
@@ -46,33 +37,14 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
         _fee = initialFee;
     }
 
-    /**
-     * @notice Returns the address of token0.
-     * @return token0 The address of token0.
-     */
     function token0() external view override returns (address) {
         return _token0;
     }
 
-    /**
-     * @notice Returns the address of token1.
-     * @return token1 The address of token1.
-     */
     function token1() external view override returns (address) {
         return _token1;
     }
 
-    /**
-     * @notice Returns the current state of the pool.
-     * @dev This function mimics the `slot0` function of Uniswap V3 pools.
-     * @return sqrtPriceX96 The current sqrt price in X96 format.
-     * @return tick The current tick.
-     * @return observationIndex Always returns 0 (not implemented in the mock).
-     * @return observationCardinality Always returns 0 (not implemented in the mock).
-     * @return observationCardinalityNext Always returns 0 (not implemented in the mock).
-     * @return feeProtocol Always returns 0 (not implemented in the mock).
-     * @return unlocked Always returns true (not implemented in the mock).
-     */
     function slot0()
         external
         view
@@ -90,52 +62,42 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
         return (_sqrtPriceX96, _tick, 0, 0, 0, 0, true);
     }
 
-    /**
-     * @notice Returns the current liquidity of the pool.
-     * @return liquidity The current liquidity amount.
-     */
     function liquidity() external view override returns (uint128) {
         return _liquidity;
     }
 
-    /**
-     * @notice Returns the trading fee of the pool.
-     * @return fee The trading fee in basis points.
-     */
     function fee() external view override returns (uint24) {
         return _fee;
     }
 
-    /**
-     * @notice Sets a new price and tick for the pool.
-     * @dev This function allows modifying the pool's price for testing purposes.
-     * @param newPrice The new sqrt price in X96 format.
-     * @param newTick The new tick value.
-     */
+    function observe(uint32[] calldata secondsAgos)
+        external
+        view
+        override
+        returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128)
+    {
+        tickCumulatives = new int56[](secondsAgos.length);
+        secondsPerLiquidityCumulativeX128 = new uint160[](secondsAgos.length);
+        
+        for (uint256 i = 0; i < secondsAgos.length; i++) {
+            tickCumulatives[i] = int56(_tick) * int56(int32(secondsAgos[i]));
+            secondsPerLiquidityCumulativeX128[i] = 0;
+        }
+    }
+
     function setPrice(uint160 newPrice, int24 newTick) external {
         _sqrtPriceX96 = newPrice;
         _tick = newTick;
     }
 
-    /**
-     * @notice Sets a new liquidity value for the pool.
-     * @dev This function allows modifying the pool's liquidity for testing purposes.
-     * @param newLiquidity The new liquidity amount.
-     */
     function setLiquidity(uint128 newLiquidity) external {
         _liquidity = newLiquidity;
     }
 
-    /**
-     * @notice Sets a new fee value for the pool.
-     * @dev This function allows modifying the pool's fee for testing purposes.
-     * @param newFee The new fee value in basis points.
-     */
     function setFee(uint24 newFee) external {
         _fee = newFee;
     }
 }
-
 
 /**
  * @title MockToken
@@ -164,14 +126,17 @@ contract UniswapOracleTest is Test {
     UniswapV3PoolMock public mockPool;
     UniswapOracle public oracle;
 
-    MockToken public token0 = new MockToken("Token 0", "TK0", 8);
-    MockToken public token1 = new MockToken("Token 1", "TK1", 4);
+    MockToken public token0;
+    MockToken public token1;
 
     /**
      * @notice Sets up the test environment.
-     * @dev Deploys a mock Uniswap V3 pool and an oracle instance for testing.
+     * @dev Deploys mock tokens, a Uniswap V3 pool mock, and an oracle instance for testing.
      */
     function setUp() public {
+        token0 = new MockToken("Token 0", "TK0", 8);
+        token1 = new MockToken("Token 1", "TK1", 6);
+
         mockPool = new UniswapV3PoolMock(
             address(token0),
             address(token1),
@@ -180,6 +145,7 @@ contract UniswapOracleTest is Test {
             1000000,
             3000
         );
+
         oracle = new UniswapOracle(address(mockPool));
     }
 
@@ -187,18 +153,13 @@ contract UniswapOracleTest is Test {
      * @notice Tests that the price normalization works correctly.
      * @dev Verifies that a 1:1 price ratio is correctly normalized to 18 decimals (WAD format).
      */
-    function testGetPriceNormalization() public {
-        // sqrtPriceX96 = 79228162514264337593543950336 (1 << 96), equivalent to 1:1 price ratio
-        uint160 sqrtPriceX96 = 79228162514264337593543950336;
+    function test_GetPrice_Normalization() public {
+        uint160 sqrtPriceX96 = 79228162514264337593543950336; // 1 << 96, equivale a preço 1:1
         mockPool.setPrice(sqrtPriceX96, 0);
 
-        // Retrieve actual price from the oracle
         uint256 price = oracle.getPrice();
-
-        // Expected price calculation using the same formula as the oracle
         uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * MathUtils.WAD) / (2**192);
 
-        // Ensure the returned price matches the expected value
         assertEq(price, expectedPrice, "Price should be normalized to 18 decimals");
     }
 
@@ -206,18 +167,45 @@ contract UniswapOracleTest is Test {
      * @notice Tests that the price is correctly computed for different decimal configurations.
      * @dev Verifies that a 0.5:1 price ratio is correctly converted.
      */
-    function testGetPriceWithDifferentDecimals() public {
-        // sqrtPriceX96 = 39614081257132168796771975168 (0.5 << 96), equivalent to 0.5:1 price ratio
-        uint160 sqrtPriceX96 = 39614081257132168796771975168;
+    function test_GetPrice_WithDifferentDecimals() public {
+        uint160 sqrtPriceX96 = 39614081257132168796771975168; // sqrt(0.5) << 96
         mockPool.setPrice(sqrtPriceX96, 0);
 
-        // Retrieve actual price from the oracle
         uint256 price = oracle.getPrice();
-
-        // Expected price calculation using the same formula as the oracle
         uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * MathUtils.WAD) / (2**192);
 
-        // Ensure the returned price matches the expected value
         assertEq(price, expectedPrice, "Price should reflect 0.5:1 ratio correctly");
+    }
+
+    /**
+     * @notice Tests if the oracle correctly updates when the pool price changes.
+     */
+    function test_GetPrice_UpdatesOnNewPoolPrice() public {
+        uint160 initialPrice = 79228162514264337593543950336; // sqrt(1) << 96
+        mockPool.setPrice(initialPrice, 0);
+
+        uint256 initialOraclePrice = oracle.getPrice();
+        assertGt(initialOraclePrice, 0, "Initial price should be valid");
+
+        uint160 newPrice = 11180339887498948482045800906; // sqrt(0.25) << 96
+        mockPool.setPrice(newPrice, 0);
+
+        uint256 updatedOraclePrice = oracle.getPrice();
+        uint256 expectedUpdatedPrice = (uint256(newPrice) * uint256(newPrice) * MathUtils.WAD) / (2**192);
+
+        assertEq(updatedOraclePrice, expectedUpdatedPrice, "Updated price should be correct");
+    }
+
+    /**
+     * @notice Tests if the oracle correctly retrieves the price for a higher value asset.
+     */
+    function test_GetPrice_HighValueAsset() public {
+        uint160 highPrice = 15874010519681947723869928283; // sqrt(2) << 96
+        mockPool.setPrice(highPrice, 0);
+
+        uint256 price = oracle.getPrice();
+        uint256 expectedPrice = (uint256(highPrice) * uint256(highPrice) * MathUtils.WAD) / (2**192);
+
+        assertEq(price, expectedPrice, "Price should match for high-value assets");
     }
 }

@@ -71,4 +71,53 @@ contract MathUtilsTest is Test {
         // Square root of 0 should return 0
         assertEq(MathUtils.sqrt(0), 0);
     }
+
+        /**
+     * @notice Tests the min function with various scenarios.
+     */
+    function testMin() public pure {
+        // Basic comparisons
+        assertEq(MathUtils.min(5, 10), 5);
+        assertEq(MathUtils.min(10, 5), 5);
+        assertEq(MathUtils.min(5, 5), 5);
+        
+        // Edge cases
+        assertEq(MathUtils.min(0, 5), 0);
+        assertEq(MathUtils.min(5, 0), 0);
+        assertEq(MathUtils.min(type(uint256).max, 5), 5);
+        assertEq(MathUtils.min(5, type(uint256).max), 5);
+    }
+
+    /**
+     * @notice Tests the max function with various scenarios.
+     */
+    function testMax() public pure {
+        // Basic comparisons
+        assertEq(MathUtils.max(5, 10), 10);
+        assertEq(MathUtils.max(10, 5), 10);
+        assertEq(MathUtils.max(5, 5), 5);
+        
+        // Edge cases
+        assertEq(MathUtils.max(0, 5), 5);
+        assertEq(MathUtils.max(5, 0), 5);
+        assertEq(MathUtils.max(type(uint256).max, 5), type(uint256).max);
+        assertEq(MathUtils.max(5, type(uint256).max), type(uint256).max);
+    }
+
+    /**
+     * @notice Tests the absDiff function with various scenarios.
+     */
+    function testAbsDiff() public pure {
+        // Basic differences
+        assertEq(MathUtils.absDiff(5, 3), 2);
+        assertEq(MathUtils.absDiff(3, 5), 2);
+        assertEq(MathUtils.absDiff(5, 5), 0);
+        
+        // Edge cases
+        assertEq(MathUtils.absDiff(0, 5), 5);
+        assertEq(MathUtils.absDiff(5, 0), 5);
+        assertEq(MathUtils.absDiff(type(uint256).max, 0), type(uint256).max);
+        assertEq(MathUtils.absDiff(0, type(uint256).max), type(uint256).max);
+        assertEq(MathUtils.absDiff(type(uint256).max, type(uint256).max), 0);
+    }
 }

@@ -55,4 +55,16 @@ interface IUniswapV3Pool {
      * @return The pool's fee in hundredths of a bip (e.g., 3000 = 0.3%).
      */
     function fee() external view returns (uint24);
+
+    /**
+     * @notice Fetches historical tick data from the Uniswap V3 oracle.
+     * @dev This function returns the cumulative tick values for the given time intervals.
+     * @param secondsAgos Array of timestamps to fetch tick data for, relative to the current block timestamp.
+     * @return tickCumulatives The cumulative tick values at the given timestamps.
+     * @return secondsPerLiquidityCumulativeX128 Not used in this implementation, but returned for compatibility.
+     */
+    function observe(uint32[] calldata secondsAgos)
+        external
+        view
+        returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128);
 }

@@ -2,13 +2,14 @@
 pragma solidity ^0.8.20;
 
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "@nebular/interfaces/IOracle.sol";
 import "@nebular/lib/MathUtils.sol";
 
 /**
  * @title ChainlinkOracle
  * @notice Provides price feeds from Chainlink oracles, ensuring price normalization to WAD (1e18).
  */
-contract ChainlinkOracle {
+contract ChainlinkOracle is IOracle {
     using MathUtils for uint256;
 
     /// @notice Chainlink price feed contract
