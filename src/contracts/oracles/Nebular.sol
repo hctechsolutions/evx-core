@@ -3,14 +3,15 @@ pragma solidity ^0.8.20;
 
 import "@nebular/contracts/oracles/Uniswap.sol";
 import "@nebular/contracts/oracles/ChainLink.sol";
+import "@nebular/interfaces/IOracle.sol";
 import "forge-std/console.sol";
 
 /**
- * @title OracleManager
+ * @title NebularOracle
  * @notice Manages price updates using Uniswap, Chainlink, and historical averages as fallback.
  * @dev Ensures that price updates follow a defined interval and slippage constraints.
  */
-contract OracleManager {
+contract NebularOracle is IOracle {
     using MathUtils for uint256;
     
     // Configurations
@@ -37,7 +38,7 @@ contract OracleManager {
     event FallbackUsed(address fallbackSource, uint256 timestamp);
 
     /**
-     * @notice Initializes the OracleManager with Uniswap and Chainlink oracles.
+     * @notice Initializes the NebularOracle with Uniswap and Chainlink oracles.
      * @param _uniswapOracle Address of the Uniswap oracle contract.
      * @param _chainlinkOracle Address of the Chainlink oracle contract.
      */

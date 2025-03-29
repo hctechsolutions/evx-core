@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "@nebular/contracts/oracles/Manager.sol";
+import "@nebular/contracts/oracles/Nebular.sol";
 import "forge-std/console.sol";
 
-interface IOracleManagerEvents {
+interface INebularOracleEvents {
     event PriceUpdated(uint256 price, address source, uint256 timestamp);
     event FallbackUsed(address fallbackSource, uint256 timestamp);
 }
@@ -46,18 +46,17 @@ contract MockChainlinkOracle is IOracle {
     }
 }
 
-contract OracleManagerTest is Test, IOracleManagerEvents {
-    OracleManager public manager;
+contract NebularOracleTest is Test, INebularOracleEvents {
+    NebularOracle public manager;
     MockUniswapOracle public uniswapOracle;
     MockChainlinkOracle public chainlinkOracle;
     
-    uint256 constant WAD = 1e18;
     uint256 constant MAX_SLIPPAGE = 0.05e18; // 5%
 
     function setUp() public {
         uniswapOracle = new MockUniswapOracle();
         chainlinkOracle = new MockChainlinkOracle();
-        manager = new OracleManager(
+        manager = new NebularOracle(
             address(uniswapOracle),
             address(chainlinkOracle)
         );
@@ -76,7 +75,7 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
      * @notice Tests if Uniswap provides the first valid price.
      */
     function test_UniswapPriceFirst() public {
-        uint256 testPrice = 1000e18;
+        uint256 testPrice = MathUtils.toWad(1000, 18);
         uniswapOracle.setPrice(testPrice);
         
         vm.expectEmit(true, true, true, true);
@@ -92,12 +91,12 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests fallback to Chainlink when Uniswap fails.
      */
-    function test_ChainlinkFallback() public {
+    function testChainlinkFallback() public {
         uniswapOracle.setShouldRevert(true);
-        chainlinkOracle.setPrice(1005e18);
+        chainlinkOracle.setPrice(MathUtils.toWad(1005, 0));
         
         vm.expectEmit(true, true, true, true, address(manager));
-        emit PriceUpdated(1005e18, address(chainlinkOracle), block.timestamp);
+        emit PriceUpdated(MathUtils.toWad(1005, 0), address(chainlinkOracle), block.timestamp);
         
         manager.updatePrice();
     }
@@ -105,9 +104,9 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests fallback to historical average when both oracles fail.
      */
-    function test_HistoricalAverageFallback() public {
+    function testHistoricalAverageFallback() public {
         uint256 sum;
-        uint256 basePrice = 990e18;
+        uint256 basePrice = MathUtils.toWad(990, 0);
         for (uint i = 0; i < manager.PRICE_HISTORY_SIZE(); i++) {
             uint256 price = basePrice + ((basePrice * 4) / 1000) * i;
             uniswapOracle.setPrice(price);
@@ -131,22 +130,22 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests that slippage protection works.
      */
-    function test_SlippageProtection() public {
-        uniswapOracle.setPrice(1000e18);
+    function testSlippageProtection() public {
+        uniswapOracle.setPrice(MathUtils.toWad(1000, 0));
         manager.updatePrice();
         
-        uniswapOracle.setPrice(1060e18);
-        chainlinkOracle.setPrice(1005e18);
+        uniswapOracle.setPrice(MathUtils.toWad(1060, 0));
+        chainlinkOracle.setPrice(MathUtils.toWad(1005, 0));
         
         _updatePriceWithDelay();
         
-        assertEq(manager.lastValidPrice(), 1005e18, "Slippage not detected");
+        assertEq(manager.lastValidPrice(), MathUtils.toWad(1005, 0), "Slippage not detected");
     }
 
     /**
      * @notice Tests that rapid updates fail.
      */
-    function test_UpdateTooSoon() public {
+    function testUpdateTooSoon() public {
         manager.updatePrice();
         
         vm.warp(block.timestamp + manager.UPDATE_INTERVAL());
@@ -159,9 +158,9 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests that the price history maintains a fixed limit.
      */
-    function test_PriceHistoryLimit() public {
+    function testPriceHistoryLimit() public {
         uniswapOracle.setShouldRevert(false);
-        uint256 lastValid = 1e18;
+        uint256 lastValid = MathUtils.WAD;
         uniswapOracle.setPrice(lastValid);
         _updatePriceWithDelay();
 
@@ -179,9 +178,9 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests that expired prices are ignored in the historical average.
      */
-    function test_ExpiredPricesIgnored() public {
+    function testExpiredPricesIgnored() public {
         for (uint i = 0; i < 5; i++) {
-            uniswapOracle.setPrice(1000e18 + i * 1e18);
+            uniswapOracle.setPrice(MathUtils.toWad(1000, 0) + i * MathUtils.WAD);
             manager.updatePrice();
             vm.warp(block.timestamp + manager.UPDATE_INTERVAL());
         }
@@ -198,7 +197,8 @@ contract OracleManagerTest is Test, IOracleManagerEvents {
     /**
      * @notice Tests price updates with fuzzing.
      */
-    function testFuzz_PriceUpdates(uint256 price) public {
+    function testFuzzPriceUpdates(uint256 price) public {
+        console.log("Verbosity added ~ :207 ~ testFuzz_PriceUpdates ~ manager.lastValidPrice():", manager.lastValidPrice());
         vm.assume(price > 0.1e18 && price < 1e30);
         
         uniswapOracle.setPrice(price);

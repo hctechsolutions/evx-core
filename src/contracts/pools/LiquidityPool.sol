@@ -133,6 +133,17 @@ contract LiquidityPool is ReentrancyGuard {
         }
     }
 
+    /**
+    * @notice Claims the accumulated fees for a specific position (identified by `tokenId`).
+    * @dev This function calculates the fees for both tokens (token0 and token1) based on the position's liquidity.
+    * It then transfers the respective fees to the position owner. The owner must be the caller of this function.
+    * The function uses the `feeGrowthGlobalToken0` and `feeGrowthGlobalToken1` to calculate the fee growth 
+    * since the last claim and updates the `feeGrowthInsideToken0` and `feeGrowthInsideToken1` for the position.
+    * 
+    * @param tokenId The ID of the position NFT from which fees are being claimed.
+    * @notice Reverts if the caller is not the owner of the specified position.
+    * @notice Reverts if there are no fees available to claim.
+    */
     function claimFees(uint256 tokenId) external nonReentrant {
         require(positionNFT.ownerOf(tokenId) == msg.sender, "Not the owner");
 
@@ -190,11 +201,11 @@ contract LiquidityPool is ReentrancyGuard {
         emit LiquidityAdded(msg.sender, tokenId, liquidity, lowerTick, upperTick);
         return tokenId;
     }
+
     /**
      * @notice Removes liquidity from the pool and burns the position NFT.
      * @param tokenId The unique identifier of the liquidity position.
      */
-
     function removeLiquidity(uint256 tokenId) external nonReentrant {
         require(positionNFT.ownerOf(tokenId) == msg.sender, "Not the owner");
         Position memory pos = positions[tokenId];
