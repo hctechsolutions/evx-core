@@ -2,8 +2,6 @@
 
 This repository contains the implementation of the smart contracts that comprise the Nebular Finances system, covering governance, liquidity, rewards, vesting, and price oracle modules. The architecture leverages OpenZeppelin standards and libraries, with integrations using Chainlink and governance mechanisms inspired by OpenZeppelin's Governor.
 
-[![Nebular CI/CD](https://github.com/jeffersson-abreu/nebular_contracts/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/jeffersson-abreu/nebular_contracts/actions/workflows/main.yml)
-
 ---
 
 ## Prerequisites

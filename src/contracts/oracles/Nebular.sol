@@ -92,6 +92,14 @@ contract NebularOracle is IOracle {
     }
 
     /**
+     * @notice Returns the last updated time
+     * @return lastUpdate A timestamp of the last price update
+     */
+    function lastUpdated() external view returns (uint256) {
+        return lastUpdate;
+    }
+
+    /**
      * @notice Fetches a specific price history entry.
      * @param index Index of the historical price entry.
      * @return price The price recorded at the given index.

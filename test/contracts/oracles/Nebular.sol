@@ -26,6 +26,10 @@ contract MockUniswapOracle is IOracle {
         require(!shouldRevert, "Uniswap Oracle Failed");
         return mockPrice;
     }
+
+    function lastUpdated() external view returns (uint256) {
+        return 0;
+    }
 }
 
 contract MockChainlinkOracle is IOracle {

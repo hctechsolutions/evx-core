@@ -5,13 +5,13 @@ import "forge-std/Test.sol";
 import {LiquidityPoolFactory} from "@nebular/contracts/pools/LiquidityPoolFactory.sol";
 import {LiquidityPool} from "@nebular/contracts/pools/LiquidityPool.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IPriceOracle} from "@nebular/interfaces/IPriceOracle.sol";
+import "@nebular/interfaces/IOracle.sol";
 
 /**
- * @title DummyPriceOracle
- * @dev Dummy implementation of IPriceOracle for testing purposes.
+ * @title DummyOracle
+ * @dev Dummy implementation of IOracle for testing purposes.
  */
-contract DummyPriceOracle is IPriceOracle {
+contract DummyPriceOracle is IOracle {
     uint256 private _price = 1e18;
     uint256 private _lastUpdated = block.timestamp;
 
@@ -19,7 +19,7 @@ contract DummyPriceOracle is IPriceOracle {
      * @dev Returns the dummy price.
      * @return The dummy price (1e18).
      */
-    function consult() external view override returns (uint256) {
+    function getPrice() external view override returns (uint256) {
         return _price;
     }
 
@@ -27,7 +27,7 @@ contract DummyPriceOracle is IPriceOracle {
      * @dev Returns the timestamp of the last update.
      * @return The current block timestamp.
      */
-    function lastUpdated() external view override returns (uint256) {
+    function lastUpdated() external view returns (uint256) {
         return _lastUpdated;
     }
 }

@@ -50,8 +50,7 @@ contract UniswapOracle is IOracle {
         secondsAgos[1] = 0;
 
 
-        // Obter dados do Uniswap V3 usando o método observe
-        // (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
+        // TODO: Improve using the observer like this -> (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
 
         uint256 priceX96 = uint256(sqrtPriceX96) * uint256(sqrtPriceX96);
         price = (priceX96 * MathUtils.WAD) / (2**192);

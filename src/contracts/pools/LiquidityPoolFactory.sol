@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@nebular/contracts/pools/LiquidityPool.sol";
 import "@nebular/contracts/pools/PositionNFT.sol";
+import "@nebular/interfaces/IOracle.sol";
 
 /**
  * @title LiquidityPoolFactory
@@ -34,7 +35,7 @@ contract LiquidityPoolFactory {
         returns (LiquidityPool pool)
     {
         require(address(_token0) != address(_token1), "Token addresses must be different");
-        pool = new LiquidityPool(_token0, _token1, IPriceOracle(_oracle));
+        pool = new LiquidityPool(_token0, _token1, IOracle(_oracle));
         liquidityPools.push(pool);
 
         emit LiquidityPoolCreated(address(pool), _token0, _token1);

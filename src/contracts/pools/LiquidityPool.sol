@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@nebular/interfaces/IPriceOracle.sol";
 import "@nebular/contracts/pools/PositionNFT.sol";
+import "@nebular/interfaces/IOracle.sol";
 import "@nebular/lib/MathUtils.sol";
 
 /**
@@ -51,8 +51,8 @@ contract LiquidityPool is ReentrancyGuard {
     address public immutable token0;
     address public immutable token1;
 
-    // Price oracle contract
-    IPriceOracle public oracle;
+    // Nebular oracle contract
+    IOracle public oracle;
 
     // Trading fee in basis points (1000 = 100%, 3 = 0.3%)
     uint256 public fee = 3;
@@ -90,7 +90,7 @@ contract LiquidityPool is ReentrancyGuard {
      * @param _token1 Address of the second token in the pair.
      * @param _oracle Address of the price oracle.
      */
-    constructor(address _token0, address _token1, IPriceOracle _oracle) {
+    constructor(address _token0, address _token1, IOracle _oracle) {
         require(_token0 != address(0) && _token1 != address(0), "Invalid token addresses");
         require(address(_oracle) != address(0), "Invalid oracle address");
 
@@ -176,7 +176,7 @@ contract LiquidityPool is ReentrancyGuard {
         require(liquidity > 0, "Invalid liquidity amount");
         require(lowerTick < upperTick, "lowerTick must be less than upperTick");
 
-        uint256 price = oracle.consult();
+        uint256 price = oracle.getPrice();
         require(price > 0, "Oracle price unavailable");
 
         // Calculate token amounts based on the current price and tick limits
@@ -212,7 +212,7 @@ contract LiquidityPool is ReentrancyGuard {
         require(pos.liquidity > 0, "Invalid position");
         require(pos.entryPrice > 0, "Invalid entry price");
 
-        uint256 price = oracle.consult();
+        uint256 price = oracle.getPrice();
         require(price > 0, "Oracle price unavailable");
 
         // Calculate base token amounts
@@ -257,7 +257,7 @@ contract LiquidityPool is ReentrancyGuard {
         Position storage pos = positions[tokenId];
         require(pos.liquidity >= liquidityAmount, "Not enough liquidity");
 
-        uint256 price = oracle.consult();
+        uint256 price = oracle.getPrice();
         require(price > 0, "Oracle price unavailable");
 
         // Update entry price based on current price
@@ -307,7 +307,7 @@ contract LiquidityPool is ReentrancyGuard {
         require(amountIn > 0, "Invalid swap amount");
         require(tokenIn == token0 || tokenIn == token1, "Invalid token");
 
-        uint256 price = oracle.consult();
+        uint256 price = oracle.getPrice();
         require(price > 0, "Oracle price unavailable");
 
         address tokenOut = (tokenIn == token0) ? token1 : token0;

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@nebular/contracts/pools/LiquidityPool.sol";
-import "@nebular/interfaces/IPriceOracle.sol";
+import "@nebular/interfaces/IOracle.sol";
 import "@nebular/lib/MathUtils.sol";
 
 /**
@@ -32,7 +32,7 @@ contract MockERC20 is ERC20 {
     }
 }
 
-contract MockOracle is IPriceOracle {
+contract MockOracle is IOracle {
     uint256 private _price;
     uint256 private _lastUpdated;
 
@@ -49,7 +49,7 @@ contract MockOracle is IPriceOracle {
      * @notice Returns the latest price from the mock oracle.
      * @return The current price.
      */
-    function consult() external view override returns (uint256) {
+    function getPrice() external view override returns (uint256) {
         return _price;
     }
 
@@ -57,7 +57,7 @@ contract MockOracle is IPriceOracle {
      * @notice Returns the last update timestamp of the price.
      * @return The last update time.
      */
-    function lastUpdated() external view override returns (uint256) {
+    function lastUpdated() external view returns (uint256) {
         return _lastUpdated;
     }
 }
@@ -77,7 +77,7 @@ contract LiquidityPoolTest is Test {
         token0 = new MockERC20("Token0", "TK0");
         token1 = new MockERC20("Token1", "TK1");
         oracle = new MockOracle();
-        pool = new LiquidityPool(address(token0), address(token1), IPriceOracle(address(oracle)));
+        pool = new LiquidityPool(address(token0), address(token1), IOracle(address(oracle)));
 
         token0.transfer(user, 1e22);
         token1.transfer(user, 1e22);
