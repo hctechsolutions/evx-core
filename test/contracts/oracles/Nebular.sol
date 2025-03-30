@@ -27,7 +27,7 @@ contract MockUniswapOracle is IOracle {
         return mockPrice;
     }
 
-    function lastUpdated() external view returns (uint256) {
+    function lastUpdated() external pure returns (uint256) {
         return 0;
     }
 }

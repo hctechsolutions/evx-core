@@ -57,7 +57,7 @@ contract MockOracle is IOracle {
      * @notice Returns the last update timestamp of the price.
      * @return The last update time.
      */
-    function lastUpdated() external view returns (uint256) {
+    function lastUpdated() external viewd returns (uint256) {
         return _lastUpdated;
     }
 }
