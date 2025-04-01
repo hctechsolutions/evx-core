@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@nebular/contracts/oracles/Uniswap.sol";
-import "@nebular/contracts/oracles/ChainLink.sol";
-import "@nebular/interfaces/IOracle.sol";
+import { ChainlinkOracle } from "@nebular/contracts/oracles/ChainLink.sol";
+import { UniswapOracle } from "@nebular/contracts/oracles/Uniswap.sol";
+import { IOracle } from "@nebular/interfaces/IOracle.sol";
+import "@nebular/lib/MathUtils.sol";
 
 /**
  * @title NebularOracle

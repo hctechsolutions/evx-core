@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@nebular/interfaces/IUniswapV3Pool.sol";
-import "@nebular/interfaces/IOracle.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IUniswapV3Pool } from "@nebular/interfaces/IUniswapV3Pool.sol";
+import { IOracle } from "@nebular/interfaces/IOracle.sol";
 import "@nebular/lib/MathUtils.sol";
 
 /**

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@nebular/contracts/pools/PositionNFT.sol";
-import "@nebular/interfaces/IOracle.sol";
+import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { PositionNFT } from "@nebular/contracts/pools/PositionNFT.sol";
+import { IOracle } from "@nebular/interfaces/IOracle.sol";
 import "@nebular/lib/MathUtils.sol";
 
 /**
