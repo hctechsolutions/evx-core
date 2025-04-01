@@ -7,34 +7,66 @@ import "@nebular/contracts/oracles/Uniswap.sol";
 import "@nebular/contracts/oracles/Nebular.sol";
 import "@nebular/interfaces/IOracle.sol";
 
-
+/**
+ * @title LiquidityPoolFactory
+ * @notice Factory contract for creating and managing LiquidityPool instances
+ * @dev Handles the creation of liquidity pools with integrated oracle support
+ */
 contract LiquidityPoolFactory {
-
+    /// @notice Error thrown when token addresses are invalid (zero address)
     error InvalidTokenAddresses();
+    
+    /// @notice Error thrown when both tokens in a pair are identical
     error IdenticalTokens();
+    
+    /// @notice Error thrown when Chainlink price feed address is invalid
     error InvalidChainlinkFeed();
+    
+    /// @notice Error thrown when Uniswap pool address is invalid
     error InvalidUniswapPool();
+    
+    /// @notice Error thrown when attempting to create an existing pool
     error PoolAlreadyExists();
+    
+    /// @notice Error thrown when Chainlink oracle creation fails
     error ChainlinkOracleCreationFailed();
+    
+    /// @notice Error thrown when Uniswap oracle creation fails
     error UniswapOracleCreationFailed();
     
+    /// @notice Array of all created liquidity pools
     LiquidityPool[] public liquidityPools;
+    
+    /// @notice Mapping from token pairs to their respective pool addresses
     mapping(address => mapping(address => address)) public getPool;
 
+    /**
+     * @notice Emitted when a new liquidity pool is created
+     * @param pool The address of the newly created pool
+     * @param token0 The first token in the pair
+     * @param token1 The second token in the pair
+     */
     event LiquidityPoolCreated(address indexed pool, address token0, address token1);
 
     /**
-     * @notice Creates a new LiquidityPool contract.
-     * @dev Deploys a new LiquidityPool instance and stores its reference.
-     * The function enforces:
-     *      - Tokens must be different addresses
-     *      - Both oracle addresses must be non-zero
-     *      - Deploys three oracle contracts (Chainlink -> Uniswap -> Nebular fallback)
-     * @param _token0 Address of the first token in the pair
-     * @param _token1 Address of the second token in the pair
-     * @param _chainLinkPriceFeed Address of the Chainlink AggregatorV3Interface contract
-     * @param _uniSwapPoolAddress Address of the Uniswap V3 pool
-     * @return pool Address of the newly created LiquidityPool contract
+     * @notice Creates a new LiquidityPool with oracle support
+     * @dev Deploys a complete oracle stack (Chainlink -> Uniswap -> Nebular fallback)
+     * @param _token0 First token in the pair
+     * @param _token1 Second token in the pair
+     * @param _chainLinkPriceFeed Chainlink price feed address
+     * @param _uniSwapPoolAddress Uniswap V3 pool address
+     * @return pool The created LiquidityPool instance
+     * 
+     * @custom:validation 
+     * - Ensures token addresses are valid (non-zero)
+     * - Ensures tokens are different
+     * - Validates oracle addresses
+     * - Checks for existing pools
+     * 
+     * @custom:oracle-stack
+     * 1. ChainlinkOracle: Primary price source
+     * 2. UniswapOracle: Secondary price source
+     * 3. TWAP: Fallback mechanism
      */
     function createLiquidityPool(
         address _token0, 
@@ -42,7 +74,7 @@ contract LiquidityPoolFactory {
         address _chainLinkPriceFeed,
         address _uniSwapPoolAddress
     ) external returns (LiquidityPool pool) {
-        // Validações convertidas para custom errors
+        // Input validations
         if (_token0 == address(0) || _token1 == address(0)) {
             revert InvalidTokenAddresses();
         }
@@ -59,6 +91,7 @@ contract LiquidityPoolFactory {
             revert PoolAlreadyExists();
         }
 
+        // Oracle deployment with fallback handling
         IOracle chainLinkOracle;
         IOracle uniswapOracle;
         IOracle nebularOracle;
@@ -80,6 +113,7 @@ contract LiquidityPoolFactory {
             address(chainLinkOracle)
         );
 
+        // Pool creation and registration
         pool = new LiquidityPool(_token0, _token1, nebularOracle);
         
         liquidityPools.push(pool);
@@ -90,23 +124,23 @@ contract LiquidityPoolFactory {
     }
 
     /**
-     * @notice Returns the total number of deployed LiquidityPools.
-     * @return The count of LiquidityPool instances created by this factory.
+     * @notice Gets the total number of created pools
+     * @return The current count of liquidity pools
+     * @dev Useful for enumeration and monitoring pool creation activity
      */
     function getLiquidityPoolCount() external view returns (uint256) {
         return liquidityPools.length;
     }
 
     /**
-    * @notice Checks if a liquidity pool exists for a given token pair
-    * @dev Uses the factory's mapping storage for O(1) lookup complexity.
-    *      The check is bidirectional - works regardless of token order.
-    *      Returns false if either token address is invalid (zero address).
-    * 
-    * @param tokenA First token address of the pair
-    * @param tokenB Second token address of the pair
-    * @return bool True if pool exists, false otherwise
-    */
+     * @notice Checks for existence of a pool for given token pair
+     * @dev Checks both token orderings (tokenA-tokenB and tokenB-tokenA)
+     * @param tokenA First token address
+     * @param tokenB Second token address
+     * @return bool True if pool exists, false otherwise
+     * 
+     * @custom:note Returns false for zero address inputs
+     */
     function poolExists(address tokenA, address tokenB) external view returns (bool) {
         return getPool[tokenA][tokenB] != address(0);
     }
