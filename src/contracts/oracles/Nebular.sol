@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "@nebular/contracts/oracles/Uniswap.sol";
 import "@nebular/contracts/oracles/ChainLink.sol";
 import "@nebular/interfaces/IOracle.sol";
-import "forge-std/console.sol";
 
 /**
  * @title NebularOracle

@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "@nebular/contracts/oracles/Nebular.sol";
-import "forge-std/console.sol";
 
 interface INebularOracleEvents {
     event PriceUpdated(uint256 price, address source, uint256 timestamp);
@@ -202,7 +201,6 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      * @notice Tests price updates with fuzzing.
      */
     function testFuzzPriceUpdates(uint256 price) public {
-        console.log("Verbosity added ~ :207 ~ testFuzz_PriceUpdates ~ manager.lastValidPrice():", manager.lastValidPrice());
         vm.assume(price > 0.1e18 && price < 1e30);
         
         uniswapOracle.setPrice(price);

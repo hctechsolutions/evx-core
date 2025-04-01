@@ -2,118 +2,230 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {LiquidityPoolFactory} from "@nebular/contracts/pools/LiquidityPoolFactory.sol";
-import {LiquidityPool} from "@nebular/contracts/pools/LiquidityPool.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@nebular/contracts/pools/LiquidityPoolFactory.sol";
+import "@nebular/contracts/pools/LiquidityPool.sol";
+import "@nebular/contracts/oracles/ChainLink.sol";
+import "@nebular/contracts/oracles/Uniswap.sol";
+import "@nebular/contracts/oracles/Nebular.sol";
 import "@nebular/interfaces/IOracle.sol";
 
-/**
- * @title DummyOracle
- * @dev Dummy implementation of IOracle for testing purposes.
- */
-contract DummyPriceOracle is IOracle {
-    uint256 private _price = 1e18;
-    uint256 private _lastUpdated = block.timestamp;
 
-    /**
-     * @dev Returns the dummy price.
-     * @return The dummy price (1e18).
-     */
-    function getPrice() external view override returns (uint256) {
-        return _price;
+contract MockAggregatorV3 {
+    function decimals() external view returns (uint8) {
+        return 8;
     }
-
-    /**
-     * @dev Returns the timestamp of the last update.
-     * @return The current block timestamp.
-     */
-    function lastUpdated() external view returns (uint256) {
-        return _lastUpdated;
+    
+    function latestRoundData() external view returns (
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) {
+        return (0, 1e18, 0, block.timestamp, 0);
     }
 }
 
-/**
- * @title DummyERC20
- * @dev Dummy ERC20 token for testing liquidity pool creation.
- */
-contract DummyERC20 is ERC20 {
-    /**
-     * @dev Constructor that mints a large supply for testing.
-     * @param name_ The name of the token.
-     * @param symbol_ The symbol of the token.
-     */
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
-        _mint(msg.sender, 1e24);
+contract MockUniswapV3Pool  {
+    address public token0;
+    address public token1;
+    uint160 public sqrtPriceX96 = 79228162514264337593543950336; // Corresponds to price of 1.0
+    
+    constructor(address _token0, address _token1) {
+        token0 = _token0;
+        token1 = _token1;
+    }
+    
+    function slot0() external view returns (
+        uint160 sqrtPriceX96_,
+        int24 tick,
+        uint16 observationIndex,
+        uint16 observationCardinality,
+        uint16 observationCardinalityNext,
+        uint8 feeProtocol,
+        bool unlocked
+    ) {
+        return (sqrtPriceX96, 0, 0, 0, 0, 0, true);
     }
 }
 
-/**
- * @title LiquidityPoolFactoryTest
- * @dev Unit tests for the LiquidityPoolFactory contract.
- */
+contract MockERC20 {
+    function decimals() external pure returns (uint8) { return 18; }
+}
+
+
 contract LiquidityPoolFactoryTest is Test {
     LiquidityPoolFactory public factory;
-    DummyERC20 public token0;
-    DummyERC20 public token1;
-    DummyPriceOracle public oracle;
+    MockAggregatorV3 public chainlinkFeed;
+    MockUniswapV3Pool public uniswapPool;
+    
+    // Dummy tokens
+    address public tokenA;
+    address public tokenB;
+    address public tokenC;
+    address public tokenD;
+    
+    event LiquidityPoolCreated(address indexed pool, address token0, address token1);
 
-    /**
-     * @dev Initial setup for tests, deploying dummy tokens, oracle and factory.
-     */
     function setUp() public {
-        // Deploy the factory (permissionless creation)
+        // Setup mock tokens
+        tokenA = address(new MockERC20());
+        tokenB = address(new MockERC20());
+        tokenC = address(new MockERC20());
+        tokenD = address(new MockERC20());
+        
+        // Setup oracles
+        chainlinkFeed = new MockAggregatorV3();
+        uniswapPool = new MockUniswapV3Pool(tokenA, tokenB);
+        
         factory = new LiquidityPoolFactory();
-        // Deploy dummy tokens and oracle for testing
-        token0 = new DummyERC20("Token0", "TK0");
-        token1 = new DummyERC20("Token1", "TK1");
-        oracle = new DummyPriceOracle();
     }
 
-    /**
-     * @dev Tests creating a new LiquidityPool through the factory.
-     */
-    function testCreateLiquidityPool() public {
-        // Create a new LiquidityPool through the factory
-        LiquidityPool pool = factory.createLiquidityPool(address(token0), address(token1), address(oracle));
+    // ========== TESTES DE CRIAÇÃO ==========
 
-        // Verify if the parameters of the pool are correctly set
-        assertEq(address(pool.token0()), address(token0), "Token0 address mismatch");
-        assertEq(address(pool.token1()), address(token1), "Token1 address mismatch");
-        assertEq(address(pool.oracle()), address(oracle), "Oracle address mismatch");
+    function testcreateLiquidityPoolSuccess() public {
+        vm.expectEmit(false, true, true, true);
+        emit LiquidityPoolCreated(address(0), tokenA, tokenB);
 
-        // Verify that the pool count is incremented
-        uint256 count = factory.getLiquidityPoolCount();
-        assertEq(count, 1, "Pool count should be 1");
+        LiquidityPool pool = factory.createLiquidityPool(
+            tokenA, 
+            tokenB, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+
+        // Verify pool creation
+        assertEq(address(factory.getPool(tokenA, tokenB)), address(pool));
+        assertEq(factory.getLiquidityPoolCount(), 1);
+        
+        // Verify pool parameters
+        assertEq(pool.token0(), tokenA);
+        assertEq(pool.token1(), tokenB);
     }
 
-    /**
-     * @dev Tests that creation reverts if one of the token addresses is invalid or tokens are the same.
-     */
-    function testRevertOnInvalidTokenAddresses() public {
-        vm.expectRevert("Invalid token addresses");
-        factory.createLiquidityPool(address(0), address(token1), address(oracle));
-        vm.expectRevert("Invalid token addresses");
-        factory.createLiquidityPool(address(token0), address(0), address(oracle));
+    // ========== TESTES DE VALIDAÇÃO ==========
 
-        vm.expectRevert("Token addresses must be different");
-        factory.createLiquidityPool(address(token0), address(token0), address(oracle));
+    function testcreateLiquidityPoolRevertIfToken0IsZero() public {
+        vm.expectRevert(LiquidityPoolFactory.InvalidTokenAddresses.selector);
+        factory.createLiquidityPool(address(0), tokenB, address(chainlinkFeed), address(uniswapPool));
     }
 
-    /**
-     * @dev Tests that creation reverts if the oracle address is invalid.
-     */
-    function testRevertOnInvalidOracle() public {
-        vm.expectRevert("Invalid oracle address");
-        factory.createLiquidityPool(address(token0), address(token1), address(0));
+    function testCreateLiquidityPoolRevertIf_token1IsZero() public {
+        vm.expectRevert(LiquidityPoolFactory.InvalidTokenAddresses.selector);
+        factory.createLiquidityPool(tokenA, address(0), address(chainlinkFeed), address(uniswapPool));
     }
 
-    /**
-     * @dev Tests that the pool count increases correctly after creating multiple pools.
-     */
-    function testMultiplePoolsCount() public {
-        factory.createLiquidityPool(address(token0), address(token1), address(oracle));
-        factory.createLiquidityPool(address(token0), address(token1), address(oracle));
-        uint256 count = factory.getLiquidityPoolCount();
-        assertEq(count, 2, "Pool count should be 2");
+    function testCreateLiquidityPoolRevertIf_identicalTokens() public {
+        vm.expectRevert(LiquidityPoolFactory.IdenticalTokens.selector);
+        factory.createLiquidityPool(tokenA, tokenA, address(chainlinkFeed), address(uniswapPool));
+    }
+
+    function testcreateLiquidityPoolRevertIfInvalidChainlinkFeed() public {
+        vm.expectRevert(LiquidityPoolFactory.InvalidChainlinkFeed.selector);
+        factory.createLiquidityPool(tokenA, tokenB, address(0), address(uniswapPool));
+    }
+
+    function testCreateLiquidityPoolRevertIf_invalidUniswapPool() public {
+        vm.expectRevert(LiquidityPoolFactory.InvalidUniswapPool.selector);
+        factory.createLiquidityPool(tokenA, tokenB, address(chainlinkFeed), address(0));
+    }
+
+    function testCreateLiquidityPoolRevertIfPoolAlreadyExists() public {
+        factory.createLiquidityPool(tokenA, tokenB, address(chainlinkFeed), address(uniswapPool));
+        vm.expectRevert(LiquidityPoolFactory.PoolAlreadyExists.selector);
+        factory.createLiquidityPool(tokenA, tokenB, address(chainlinkFeed), address(uniswapPool));
+    }
+
+
+    // ========== TESTES DE ORACLE ==========
+
+    function testoracleInitialization() public {
+        LiquidityPool pool = factory.createLiquidityPool(
+            tokenA, 
+            tokenB, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+        
+        // Verify oracle chain was created correctly
+        IOracle nebularOracle = pool.oracle();
+        
+        // In a real test, you would verify the oracle chain structure
+        assertTrue(address(nebularOracle) != address(0));
+    }
+
+    // ========== TESTES ADICIONAIS ==========
+
+    function testpoolExists() public {
+        assertFalse(factory.poolExists(tokenA, tokenB));
+        
+        LiquidityPool pool = factory.createLiquidityPool(
+            tokenA, 
+            tokenB, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+        
+        assertTrue(factory.poolExists(tokenA, tokenB));
+        assertTrue(factory.poolExists(tokenB, tokenA)); // Should work bidirectionally
+    }
+
+    function testmultiplePoolCreation() public {
+        factory.createLiquidityPool(tokenA, tokenB, address(chainlinkFeed), address(uniswapPool));
+        factory.createLiquidityPool(tokenA, tokenC, address(chainlinkFeed), address(new MockUniswapV3Pool(tokenA, tokenC)));
+        
+        assertEq(factory.getLiquidityPoolCount(), 2);
+        assertTrue(factory.poolExists(tokenA, tokenB));
+        assertTrue(factory.poolExists(tokenA, tokenC));
+    }
+
+    function testCompleteIntegration() public {
+        // Cria primeiro pool
+        LiquidityPool poolAB = factory.createLiquidityPool(
+            tokenA, 
+            tokenB, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+    
+        // Verifica estado
+        assertEq(factory.getLiquidityPoolCount(), 1);
+        assertTrue(factory.poolExists(tokenA, tokenB));
+        assertEq(address(factory.getPool(tokenA, tokenB)), address(poolAB));
+    
+        // Tenta criar pool duplicado
+        vm.expectRevert(LiquidityPoolFactory.PoolAlreadyExists.selector);
+        factory.createLiquidityPool(tokenB, tokenA, address(chainlinkFeed), address(uniswapPool));
+    
+        // Cria segundo pool
+        LiquidityPool poolAC = factory.createLiquidityPool(
+            tokenA, 
+            tokenC, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+    
+        // Verifica estado atualizado
+        assertEq(factory.getLiquidityPoolCount(), 2);
+        assertTrue(factory.poolExists(tokenA, tokenC));
+        assertFalse(factory.poolExists(tokenB, tokenC));
+    
+        // Verifica parâmetros
+        assertEq(poolAB.token0(), tokenA);
+        assertEq(poolAB.token1(), tokenB);
+        assertEq(poolAC.token0(), tokenA);
+        assertEq(poolAC.token1(), tokenC);
+    
+        // Cria terceiro pool com novo par
+        LiquidityPool poolCD = factory.createLiquidityPool(
+            tokenC, 
+            tokenD, 
+            address(chainlinkFeed), 
+            address(uniswapPool)
+        );
+    
+        assertEq(factory.getLiquidityPoolCount(), 3);
+        assertTrue(factory.poolExists(tokenC, tokenD));
     }
 }
