@@ -1,5 +1,5 @@
 # RewardSystem
-[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/ec613b8e4edfc995d98c4c7aaaac9edf0c72aed1/src/contracts/pools/RewardSystem.sol)
+[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/8c0ed3db7d893c386ed8057ac0f00d846f64b26e/src/contracts/pools/RewardSystem.sol)
 
 
 ## State Variables

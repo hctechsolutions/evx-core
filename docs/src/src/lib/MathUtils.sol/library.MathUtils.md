@@ -1,5 +1,5 @@
 # MathUtils
-[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/ec613b8e4edfc995d98c4c7aaaac9edf0c72aed1/src/lib/MathUtils.sol)
+[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/8c0ed3db7d893c386ed8057ac0f00d846f64b26e/src/lib/MathUtils.sol)
 
 *Library for common mathematical operations used in DeFi protocols.*
 
@@ -87,4 +87,55 @@ function sqrt(uint256 x) internal pure returns (uint256);
 |----|----|-----------|
 |`<none>`|`uint256`|The square root of x.|
 
+
+### toWad
+
+Normalizes a given value to 18 decimal places (WAD).
+
+*Scales the input value to maintain consistent precision in calculations.*
+
+
+```solidity
+function toWad(uint256 value, uint8 decimals) internal pure returns (uint256 wadValue);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`value`|`uint256`|The raw price value from an oracle (e.g., Chainlink).|
+|`decimals`|`uint8`|The current decimal places of `value`.|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`wadValue`|`uint256`|The value scaled to 18 decimals (WAD).|
+
+
+### min
+
+*Returns the smallest of two numbers.*
+
+
+```solidity
+function min(uint256 a, uint256 b) internal pure returns (uint256);
+```
+
+### max
+
+*Returns the largest of two numbers.*
+
+
+```solidity
+function max(uint256 a, uint256 b) internal pure returns (uint256);
+```
+
+### absDiff
+
+*Returns the absolute difference between two numbers.*
+
+
+```solidity
+function absDiff(uint256 a, uint256 b) internal pure returns (uint256);
+```
 

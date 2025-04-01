@@ -1,5 +1,5 @@
 # LiquidityPool
-[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/ec613b8e4edfc995d98c4c7aaaac9edf0c72aed1/src/contracts/pools/LiquidityPool.sol)
+[Git Source](https://github.com/jeffersson-abreu/nebula_contracts/blob/8c0ed3db7d893c386ed8057ac0f00d846f64b26e/src/contracts/pools/LiquidityPool.sol)
 
 **Inherits:**
 ReentrancyGuard
@@ -62,7 +62,7 @@ address public immutable token1;
 ### oracle
 
 ```solidity
-IPriceOracle public oracle;
+IOracle public oracle;
 ```
 
 
@@ -80,7 +80,7 @@ Initializes the liquidity pool with two tokens and an oracle.
 
 
 ```solidity
-constructor(address _token0, address _token1, IPriceOracle _oracle);
+constructor(address _token0, address _token1, IOracle _oracle);
 ```
 **Parameters**
 
@@ -88,7 +88,7 @@ constructor(address _token0, address _token1, IPriceOracle _oracle);
 |----|----|-----------|
 |`_token0`|`address`|Address of the first token in the pair.|
 |`_token1`|`address`|Address of the second token in the pair.|
-|`_oracle`|`IPriceOracle`|Address of the price oracle.|
+|`_oracle`|`IOracle`|Address of the price oracle.|
 
 
 ### calculateTokenAmounts
@@ -126,10 +126,27 @@ function calculateTokenAmounts(uint256 liquidity, uint256 price, int24 lowerTick
 
 ### claimFees
 
+Claims the accumulated fees for a specific position (identified by `tokenId`).
+
+Reverts if the caller is not the owner of the specified position.
+
+Reverts if there are no fees available to claim.
+
+*This function calculates the fees for both tokens (token0 and token1) based on the position's liquidity.
+It then transfers the respective fees to the position owner. The owner must be the caller of this function.
+The function uses the `feeGrowthGlobalToken0` and `feeGrowthGlobalToken1` to calculate the fee growth
+since the last claim and updates the `feeGrowthInsideToken0` and `feeGrowthInsideToken1` for the position.*
+
 
 ```solidity
 function claimFees(uint256 tokenId) external nonReentrant;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`tokenId`|`uint256`|The ID of the position NFT from which fees are being claimed.|
+
 
 ### addLiquidity
 

@@ -2,4 +2,5 @@
 
 # Contents
 - [IGovernanceToken](IGovernanceToken.sol/interface.IGovernanceToken.md)
-- [IPriceOracle](IPriceOracle.sol/interface.IPriceOracle.md)
+- [IOracle](IOracle.sol/interface.IOracle.md)
+- [IUniswapV3Pool](IUniswapV3Pool.sol/interface.IUniswapV3Pool.md)
