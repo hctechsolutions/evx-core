@@ -92,26 +92,23 @@ contract LiquidityPoolFactory {
         }
 
         // Oracle deployment with fallback handling
-        IOracle chainLinkOracle;
-        IOracle uniswapOracle;
+        address chainLinkOracle;
+        address uniswapOracle;
         IOracle nebularOracle;
         
         try new ChainlinkOracle(_chainLinkPriceFeed) returns (ChainlinkOracle createdOracle) {
-            chainLinkOracle = createdOracle;
+            chainLinkOracle = address(createdOracle);
         } catch {
             revert ChainlinkOracleCreationFailed();
         }
         
         try new UniswapOracle(_uniSwapPoolAddress) returns (UniswapOracle createdOracle) {
-            uniswapOracle = createdOracle;
+            uniswapOracle = address(createdOracle);
         } catch {
             revert UniswapOracleCreationFailed();
         }
 
-        nebularOracle = new NebularOracle(
-            address(uniswapOracle), 
-            address(chainLinkOracle)
-        );
+        nebularOracle = new NebularOracle(uniswapOracle, chainLinkOracle);
 
         // Pool creation and registration
         pool = new LiquidityPool(_token0, _token1, nebularOracle);
