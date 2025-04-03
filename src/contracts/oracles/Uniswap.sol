@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IUniswapV3Pool } from "@nebular/interfaces/IUniswapV3Pool.sol";
 import { IOracle } from "@nebular/interfaces/IOracle.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title UniswapOracle
@@ -12,7 +12,7 @@ import "@nebular/lib/MathUtils.sol";
  * @dev Uses Uniswap V3's `observe` function to get a time-weighted average price (TWAP).
  */
 contract UniswapOracle is IOracle {
-    using MathUtils for uint256;
+    using SafeMath for uint256;
 
     /// @notice Address of the Uniswap V3 pool.
     IUniswapV3Pool public immutable pool;
@@ -53,7 +53,7 @@ contract UniswapOracle is IOracle {
         // TODO: Improve using the observer like this -> (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
 
         uint256 priceX96 = uint256(sqrtPriceX96) * uint256(sqrtPriceX96);
-        price = (priceX96 * MathUtils.WAD) / (2**192);
+        price = (priceX96 * SafeMath.WAD) / (2**192);
     }
 
     /**

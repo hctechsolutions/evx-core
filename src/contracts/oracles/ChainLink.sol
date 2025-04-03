@@ -3,14 +3,14 @@ pragma solidity ^0.8.20;
 
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import { IOracle } from "@nebular/interfaces/IOracle.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title ChainlinkOracle
  * @notice Provides price feeds from Chainlink oracles, ensuring price normalization to WAD (1e18).
  */
 contract ChainlinkOracle is IOracle {
-    using MathUtils for uint256;
+    using SafeMath for uint256;
 
     /// @notice Chainlink price feed contract
     AggregatorV3Interface public immutable priceFeed;
@@ -38,6 +38,6 @@ contract ChainlinkOracle is IOracle {
         require(answer > 0, "Invalid Chainlink price");
         
         uint256 rawPrice = uint256(answer);
-        return MathUtils.toWad(rawPrice, chainlinkDecimals);
+        return SafeMath.toWad(rawPrice, chainlinkDecimals);
     }
 }

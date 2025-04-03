@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@nebular/contracts/pools/LiquidityPool.sol";
 import "@nebular/interfaces/IOracle.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title LiquidityPoolTest
@@ -184,7 +184,7 @@ contract LiquidityPoolTest is Test {
 
         // Expected swap amount considering 0.3% fee
         uint256 amountInAfterFee = 1e18 - (1e18 * 3) / 1000; // 0.3% fee applied
-        uint256 amountInWithFee = MathUtils.wadMul(amountInAfterFee, 997e15); // Apply fee using contract logic
+        uint256 amountInWithFee = SafeMath.wadMul(amountInAfterFee, 997e15); // Apply fee using contract logic
 
         uint256 reserveIn = 3e18; // Token0 balance in the pool
         uint256 reserveOut = 6e18; // Token1 balance in the pool (3e18 * 2)

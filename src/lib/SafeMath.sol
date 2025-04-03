@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title MathUtils
+ * @title SafeMath
  * @dev Library for common mathematical operations used in DeFi protocols.
  */
-library MathUtils {
+library SafeMath {
     /// @dev Standard scaling factor (1e18) used for fixed-point arithmetic.
     uint256 internal constant WAD = 1e18;
 

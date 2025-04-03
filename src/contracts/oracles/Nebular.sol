@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { ChainlinkOracle } from "@nebular/contracts/oracles/ChainLink.sol";
 import { UniswapOracle } from "@nebular/contracts/oracles/Uniswap.sol";
 import { IOracle } from "@nebular/interfaces/IOracle.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title NebularOracle
@@ -12,7 +12,7 @@ import "@nebular/lib/MathUtils.sol";
  * @dev Ensures that price updates follow a defined interval and slippage constraints.
  */
 contract NebularOracle is IOracle {
-    using MathUtils for uint256;
+    using SafeMath for uint256;
     
     // Configurations
     uint256 public constant MAX_SLIPPAGE = 5e16; // 5% (in WAD precision)
@@ -180,7 +180,7 @@ contract NebularOracle is IOracle {
         uint256 diff = newPrice > referencePrice 
             ? newPrice - referencePrice 
             : referencePrice - newPrice;
-        return (diff * MathUtils.WAD) / referencePrice <= MAX_SLIPPAGE;
+        return (diff * SafeMath.WAD) / referencePrice <= MAX_SLIPPAGE;
     }
 
     /**

@@ -6,7 +6,7 @@ import "@nebular/contracts/oracles/Uniswap.sol";
 import "@nebular/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title UniswapV3PoolMock
@@ -121,7 +121,7 @@ contract MockToken is ERC20 {
  * @dev This contract contains unit tests to verify the accuracy and normalization of prices retrieved from UniswapOracle.
  */
 contract UniswapOracleTest is Test {
-    using MathUtils for uint256;
+    using SafeMath for uint256;
 
     UniswapV3PoolMock public mockPool;
     UniswapOracle public oracle;
@@ -158,7 +158,7 @@ contract UniswapOracleTest is Test {
         mockPool.setPrice(sqrtPriceX96, 0);
 
         uint256 price = oracle.getPrice();
-        uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * MathUtils.WAD) / (2**192);
+        uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * SafeMath.WAD) / (2**192);
 
         assertEq(price, expectedPrice, "Price should be normalized to 18 decimals");
     }
@@ -172,7 +172,7 @@ contract UniswapOracleTest is Test {
         mockPool.setPrice(sqrtPriceX96, 0);
 
         uint256 price = oracle.getPrice();
-        uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * MathUtils.WAD) / (2**192);
+        uint256 expectedPrice = (uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * SafeMath.WAD) / (2**192);
 
         assertEq(price, expectedPrice, "Price should reflect 0.5:1 ratio correctly");
     }
@@ -191,7 +191,7 @@ contract UniswapOracleTest is Test {
         mockPool.setPrice(newPrice, 0);
 
         uint256 updatedOraclePrice = oracle.getPrice();
-        uint256 expectedUpdatedPrice = (uint256(newPrice) * uint256(newPrice) * MathUtils.WAD) / (2**192);
+        uint256 expectedUpdatedPrice = (uint256(newPrice) * uint256(newPrice) * SafeMath.WAD) / (2**192);
 
         assertEq(updatedOraclePrice, expectedUpdatedPrice, "Updated price should be correct");
     }
@@ -204,7 +204,7 @@ contract UniswapOracleTest is Test {
         mockPool.setPrice(highPrice, 0);
 
         uint256 price = oracle.getPrice();
-        uint256 expectedPrice = (uint256(highPrice) * uint256(highPrice) * MathUtils.WAD) / (2**192);
+        uint256 expectedPrice = (uint256(highPrice) * uint256(highPrice) * SafeMath.WAD) / (2**192);
 
         assertEq(price, expectedPrice, "Price should match for high-value assets");
     }

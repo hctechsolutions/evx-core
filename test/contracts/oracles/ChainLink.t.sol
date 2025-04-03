@@ -141,7 +141,7 @@ contract ChainlinkTest is Test {
      */
     function testGetPrice() public view {
         uint256 price = oracle.getPrice();
-        uint256 expectedPrice = MathUtils.toWad(uint256(INITIAL_PRICE), 8);
+        uint256 expectedPrice = SafeMath.toWad(uint256(INITIAL_PRICE), 8);
         assertEq(price, expectedPrice, "Price should match the Chainlink feed");
     }
 
@@ -152,7 +152,7 @@ contract ChainlinkTest is Test {
         int256 newPrice = 2200 * 10 ** 8;
         chainlinkMock.setLatestAnswer(newPrice);
         uint256 updatedPrice = oracle.getPrice();
-        uint256 expectedPrice = MathUtils.toWad(uint256(newPrice), 8);
+        uint256 expectedPrice = SafeMath.toWad(uint256(newPrice), 8);
         assertEq(updatedPrice, expectedPrice, "Updated price should match the new Chainlink feed value");
     }
 

@@ -78,7 +78,7 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      * @notice Tests if Uniswap provides the first valid price.
      */
     function test_UniswapPriceFirst() public {
-        uint256 testPrice = MathUtils.toWad(1000, 18);
+        uint256 testPrice = SafeMath.toWad(1000, 18);
         uniswapOracle.setPrice(testPrice);
         
         vm.expectEmit(true, true, true, true);
@@ -96,10 +96,10 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      */
     function testChainlinkFallback() public {
         uniswapOracle.setShouldRevert(true);
-        chainlinkOracle.setPrice(MathUtils.toWad(1005, 0));
+        chainlinkOracle.setPrice(SafeMath.toWad(1005, 0));
         
         vm.expectEmit(true, true, true, true, address(manager));
-        emit PriceUpdated(MathUtils.toWad(1005, 0), address(chainlinkOracle), block.timestamp);
+        emit PriceUpdated(SafeMath.toWad(1005, 0), address(chainlinkOracle), block.timestamp);
         
         manager.updatePrice();
     }
@@ -109,7 +109,7 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      */
     function testHistoricalAverageFallback() public {
         uint256 sum;
-        uint256 basePrice = MathUtils.toWad(990, 0);
+        uint256 basePrice = SafeMath.toWad(990, 0);
         for (uint i = 0; i < manager.PRICE_HISTORY_SIZE(); i++) {
             uint256 price = basePrice + ((basePrice * 4) / 1000) * i;
             uniswapOracle.setPrice(price);
@@ -134,15 +134,15 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      * @notice Tests that slippage protection works.
      */
     function testSlippageProtection() public {
-        uniswapOracle.setPrice(MathUtils.toWad(1000, 0));
+        uniswapOracle.setPrice(SafeMath.toWad(1000, 0));
         manager.updatePrice();
         
-        uniswapOracle.setPrice(MathUtils.toWad(1060, 0));
-        chainlinkOracle.setPrice(MathUtils.toWad(1005, 0));
+        uniswapOracle.setPrice(SafeMath.toWad(1060, 0));
+        chainlinkOracle.setPrice(SafeMath.toWad(1005, 0));
         
         _updatePriceWithDelay();
         
-        assertEq(manager.lastValidPrice(), MathUtils.toWad(1005, 0), "Slippage not detected");
+        assertEq(manager.lastValidPrice(), SafeMath.toWad(1005, 0), "Slippage not detected");
     }
 
     /**
@@ -163,7 +163,7 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      */
     function testPriceHistoryLimit() public {
         uniswapOracle.setShouldRevert(false);
-        uint256 lastValid = MathUtils.WAD;
+        uint256 lastValid = SafeMath.WAD;
         uniswapOracle.setPrice(lastValid);
         _updatePriceWithDelay();
 
@@ -183,7 +183,7 @@ contract NebularOracleTest is Test, INebularOracleEvents {
      */
     function testExpiredPricesIgnored() public {
         for (uint i = 0; i < 5; i++) {
-            uniswapOracle.setPrice(MathUtils.toWad(1000, 0) + i * MathUtils.WAD);
+            uniswapOracle.setPrice(SafeMath.toWad(1000, 0) + i * SafeMath.WAD);
             manager.updatePrice();
             vm.warp(block.timestamp + manager.UPDATE_INTERVAL());
         }

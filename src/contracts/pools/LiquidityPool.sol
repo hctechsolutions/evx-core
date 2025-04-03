@@ -5,7 +5,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { PositionNFT } from "@nebular/contracts/pools/PositionNFT.sol";
 import { IOracle } from "@nebular/interfaces/IOracle.sol";
-import "@nebular/lib/MathUtils.sol";
+import "@nebular/lib/SafeMath.sol";
 
 /**
  * @title LiquidityPool
@@ -14,7 +14,7 @@ import "@nebular/lib/MathUtils.sol";
  */
 contract LiquidityPool is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    using MathUtils for uint256;
+    using SafeMath for uint256;
 
     /**
      * @dev Represents a liquidity position within the pool.
@@ -120,7 +120,7 @@ contract LiquidityPool is ReentrancyGuard {
         pure
         returns (uint256 amountToken0, uint256 amountToken1)
     {
-        uint256 normalizedPrice = price / MathUtils.WAD; // Normalize for tick comparison
+        uint256 normalizedPrice = price / SafeMath.WAD; // Normalize for tick comparison
         if (normalizedPrice <= uint256(uint24(lowerTick))) {
             amountToken0 = liquidity;
             amountToken1 = 0;
@@ -128,7 +128,7 @@ contract LiquidityPool is ReentrancyGuard {
             amountToken0 = 0;
             amountToken1 = liquidity;
         } else {
-            amountToken0 = (liquidity * MathUtils.WAD) / (price + MathUtils.WAD);
+            amountToken0 = (liquidity * SafeMath.WAD) / (price + SafeMath.WAD);
             amountToken1 = liquidity - amountToken0;
         }
     }
@@ -149,8 +149,8 @@ contract LiquidityPool is ReentrancyGuard {
 
         Position storage pos = positions[tokenId];
 
-        uint256 feeToken0 = (pos.liquidity * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / MathUtils.WAD;
-        uint256 feeToken1 = (pos.liquidity * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / MathUtils.WAD;
+        uint256 feeToken0 = (pos.liquidity * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / SafeMath.WAD;
+        uint256 feeToken1 = (pos.liquidity * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / SafeMath.WAD;
 
         require(feeToken0 > 0 || feeToken1 > 0, "No fees available");
 
@@ -220,17 +220,17 @@ contract LiquidityPool is ReentrancyGuard {
             calculateTokenAmounts(pos.liquidity, price, pos.lowerTick, pos.upperTick);
 
         // Impermanent loss calculation
-        uint256 p = (price * MathUtils.WAD) / pos.entryPrice;
-        uint256 sqrtP = MathUtils.sqrt(p * MathUtils.WAD);
+        uint256 p = (price * SafeMath.WAD) / pos.entryPrice;
+        uint256 sqrtP = SafeMath.sqrt(p * SafeMath.WAD);
         uint256 ilFactor =
-            MathUtils.wadMul(2 * sqrtP, MathUtils.wadMul(MathUtils.WAD, MathUtils.WAD)) / (p + MathUtils.WAD);
+            SafeMath.wadMul(2 * sqrtP, SafeMath.wadMul(SafeMath.WAD, SafeMath.WAD)) / (p + SafeMath.WAD);
 
-        uint256 amountToken0 = (baseAmountToken0 * ilFactor) / MathUtils.WAD;
-        uint256 amountToken1 = (baseAmountToken1 * ilFactor) / MathUtils.WAD;
+        uint256 amountToken0 = (baseAmountToken0 * ilFactor) / SafeMath.WAD;
+        uint256 amountToken1 = (baseAmountToken1 * ilFactor) / SafeMath.WAD;
 
         // Calculate accumulated fees
-        uint256 feeToken0 = (pos.liquidity * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / MathUtils.WAD;
-        uint256 feeToken1 = (pos.liquidity * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / MathUtils.WAD;
+        uint256 feeToken0 = (pos.liquidity * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / SafeMath.WAD;
+        uint256 feeToken1 = (pos.liquidity * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / SafeMath.WAD;
 
         amountToken0 += feeToken0;
         amountToken1 += feeToken1;
@@ -266,16 +266,16 @@ contract LiquidityPool is ReentrancyGuard {
         (uint256 baseAmountToken0, uint256 baseAmountToken1) =
             calculateTokenAmounts(liquidityAmount, price, pos.lowerTick, pos.upperTick);
 
-        uint256 p = (price * MathUtils.WAD) / pos.entryPrice;
-        uint256 sqrtP = MathUtils.sqrt(p * MathUtils.WAD);
-        uint256 ilFactor = (2 * sqrtP * MathUtils.WAD) / (p + MathUtils.WAD);
+        uint256 p = (price * SafeMath.WAD) / pos.entryPrice;
+        uint256 sqrtP = SafeMath.sqrt(p * SafeMath.WAD);
+        uint256 ilFactor = (2 * sqrtP * SafeMath.WAD) / (p + SafeMath.WAD);
 
-        uint256 amountToken0 = (baseAmountToken0 * ilFactor) / MathUtils.WAD;
-        uint256 amountToken1 = (baseAmountToken1 * ilFactor) / MathUtils.WAD;
+        uint256 amountToken0 = (baseAmountToken0 * ilFactor) / SafeMath.WAD;
+        uint256 amountToken1 = (baseAmountToken1 * ilFactor) / SafeMath.WAD;
 
         // Calculate accumulated fees
-        uint256 feeToken0 = (liquidityAmount * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / MathUtils.WAD;
-        uint256 feeToken1 = (liquidityAmount * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / MathUtils.WAD;
+        uint256 feeToken0 = (liquidityAmount * (feeGrowthGlobalToken0 - pos.feeGrowthInsideToken0)) / SafeMath.WAD;
+        uint256 feeToken1 = (liquidityAmount * (feeGrowthGlobalToken1 - pos.feeGrowthInsideToken1)) / SafeMath.WAD;
 
         amountToken0 += feeToken0;
         amountToken1 += feeToken1;
@@ -319,7 +319,7 @@ contract LiquidityPool is ReentrancyGuard {
 
         require(reserveOut > 0, "Not enough liquidity");
 
-        uint256 amountInWithFee = MathUtils.wadMul(amountInAfterFee, 997e15); // 997 / 1000 converted to WAD
+        uint256 amountInWithFee = SafeMath.wadMul(amountInAfterFee, 997e15); // 997 / 1000 converted to WAD
         amountOut = (amountInWithFee * reserveOut) / (reserveIn * 1000 + amountInWithFee);
 
         require(amountOut > 0 && amountOut <= reserveOut, "Not enough liquidity");
@@ -327,9 +327,9 @@ contract LiquidityPool is ReentrancyGuard {
         // Update global fee accumulation by distributing the swap fee
         if (totalLiquidity > 0) {
             if (tokenIn == token0) {
-                feeGrowthGlobalToken0 += MathUtils.wadDiv(feeAmount, totalLiquidity);
+                feeGrowthGlobalToken0 += SafeMath.wadDiv(feeAmount, totalLiquidity);
             } else {
-                feeGrowthGlobalToken1 += MathUtils.wadDiv(feeAmount, totalLiquidity);
+                feeGrowthGlobalToken1 += SafeMath.wadDiv(feeAmount, totalLiquidity);
             }
         }
 
