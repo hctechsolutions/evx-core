@@ -161,6 +161,7 @@ contract DeployV1 is Script {
         // Transfer timelock admin to DAO
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(dao));
         timelock.grantRole(timelock.EXECUTOR_ROLE(), address(dao));
+        timelock.grantRole(timelock.CANCELLER_ROLE(), address(dao));
         timelock.revokeRole(timelock.DEFAULT_ADMIN_ROLE(), deployerAddress);
         
         console.log("Timelock permissions transferred to DAO");

@@ -26,11 +26,15 @@ contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernance
     }
 
     /**
-     * @notice Internal function to handle token transfers
+     * @notice Internal function to handle token transfers and voting power
      * @dev Ensures proper update of voting power and nonces
      */
     function _update(address from, address to, uint256 amount) internal override(ERC20, ERC20Votes) {
         super._update(from, to, amount);
+
+        if (to != address(0) && delegates(to) == address(0)) {
+            _delegate(to, to);
+        }
     }
 
     /**

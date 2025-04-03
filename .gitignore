@@ -12,3 +12,9 @@ broadcast/**/dry-run/
 
 # Bash files
 *.sh
+
+# Annotations
+annotations.txt
+
+# Development playground
+playground
