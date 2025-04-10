@@ -41,7 +41,7 @@ contract GovernanceDAO is
         GovernorVotes(IVotes(address(_token))) // Explicit conversion to IVotes
         GovernorTimelockControl(_timelock)
         GovernorCountingOverridable()
-        GovernorVotesQuorumFraction(51) // Set quorum to 51%
+        GovernorVotesQuorumFraction(51) // Set quorum to %
     {
         governanceToken = _token;
     }
@@ -107,7 +107,7 @@ contract GovernanceDAO is
      * @return uint256 The number of blocks to wait before voting starts.
      */
     function votingDelay() public pure override(Governor) returns (uint256) {
-        return 5760;
+        return 5; // Default Delay: 5760
     }
 
     /**
@@ -116,7 +116,7 @@ contract GovernanceDAO is
      * @return uint256 The number of blocks for which voting remains open.
      */
     function votingPeriod() public pure override(Governor) returns (uint256) {
-        return 40320;
+        return 30; // Default Voting Perios 40320
     }
 
     /**

@@ -44,6 +44,9 @@ contract TokenVester is Ownable {
     /// @notice Event emitted when tokens are released
     event TokensReleased(uint256 amount);
 
+    /// @notice The address that will be the beneficiary of the tokens
+    address beneficiary;
+
     /**
      * @notice Initializes the token vesting contract.
      * @dev Ensures valid allocation and vesting duration. Tokens are released gradually over time.
@@ -52,7 +55,7 @@ contract TokenVester is Ownable {
      * @param _initialRelease The number of tokens released immediately at the start.
      * @param _totalAllocation The total amount of tokens allocated for vesting.
      * @param _vestingDuration The duration (in seconds) over which the remaining tokens vest.
-     * @param _owner The address that will own the vesting contract.
+     * @param _beneficiary The address that will be the beneficiary of the tokens.
      */
     constructor(
         IERC20 _token,
@@ -60,6 +63,7 @@ contract TokenVester is Ownable {
         uint256 _initialRelease,
         uint256 _totalAllocation,
         uint256 _vestingDuration,
+        address _beneficiary,
         address _owner
     ) Ownable(_owner) {
         require(_totalAllocation > _initialRelease, "Invalid allocation");
@@ -71,10 +75,11 @@ contract TokenVester is Ownable {
         initialRelease = _initialRelease;
         totalAllocation = _totalAllocation;
         vestingDuration = _vestingDuration;
+        beneficiary = _beneficiary;
     }
 
     /**
-     * @notice Releases vested tokens to the contract owner.
+     * @notice Releases vested tokens to the beneficiary.
      * @dev Only the contract owner can call this function. It calculates the total vested tokens,
      * deducts any already released amounts, and transfers the remaining vested tokens.
      * @notice Reverts if no new tokens are available to release.
@@ -86,7 +91,7 @@ contract TokenVester is Ownable {
         uint256 amount = vested - released;
         released = vested;
 
-        token.safeTransfer(owner(), amount);
+        token.safeTransfer(beneficiary, amount);
         emit TokensReleased(amount);
     }
 

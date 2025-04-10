@@ -7,6 +7,8 @@ import "@nebular/contracts/governance/GovernanceToken.sol";
 import "@openzeppelin/contracts/governance/TimelockController.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import "forge-std/console.sol";
+
 
 /**
  * @title GovernanceDAOTest
@@ -22,8 +24,8 @@ contract GovernanceDAOTest is Test {
     address public constant VOTER2 = address(3);
     address public constant OWNER = address(4);
 
-    uint256 public constant VOTING_DELAY = 5760;
-    uint256 public constant VOTING_PERIOD = 40320;
+    uint256 public constant VOTING_DELAY = 0;
+    uint256 public constant VOTING_PERIOD = 120;
     uint256 public constant QUORUM_PERCENT = 51; // 51%
 
     event ProposalCreated(
@@ -86,10 +88,10 @@ contract GovernanceDAOTest is Test {
         targets[0] = address(0x123);
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("dummy()");
+        calldatas[0] = abi.encodeWithSignature("release()");
         string memory description = "Test Proposal";
         bytes32 descriptionHash = keccak256(bytes(description));
-
+        
         // Create proposal as VOTER1
         vm.prank(VOTER1);
         uint256 proposalId = dao.propose(targets, values, calldatas, description);

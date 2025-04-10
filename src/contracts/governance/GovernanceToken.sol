@@ -13,6 +13,9 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Extends OpenZeppelin's ERC20, ERC20Votes, ERC20Permit, and Ownable
  */
 contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernanceToken {
+
+    event AutoDelegated(address indexed account);
+
     /**
      * @notice Initializes the Nebular Governance Token
      * @param initialOwner Address that will receive the initial supply
@@ -34,6 +37,7 @@ contract GovernanceToken is ERC20, ERC20Votes, ERC20Permit, Ownable, IGovernance
 
         if (to != address(0) && delegates(to) == address(0)) {
             _delegate(to, to);
+            emit AutoDelegated(to);
         }
     }
 
