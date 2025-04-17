@@ -17,8 +17,8 @@ This repository contains the implementation of the smart contracts that comprise
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/jeffersson-abreu/nebula_contracts.git
-   cd nebula_contracts
+   git clone [https://github.com/defi/nebular_contracts.git]
+   cd nebular_contracts
    ```
 
 2. Ensure you have Foundry installed and updated:
@@ -72,7 +72,7 @@ Ensure that all tests pass before proceeding with deployment.
 
 ## Contract Deployment
 
-Deployment is handled via Foundry scripts located in the `scripts` folder. The main deploy script is `Deploy.s.sol`.
+Deployment is handled via Foundry scripts located in the `scripts` folder. The main deploy script is `DeployV1.s.sol`.
 
 To deploy the contracts on a local network using Anvil:
 
@@ -85,13 +85,13 @@ To deploy the contracts on a local network using Anvil:
 2. Run the deploy script using Anvil as your local RPC:
 
    ```bash
-   forge script scripts/Deploy.s.sol --fork-url http://127.0.0.1:8545 --broadcast
+   forge script scripts/DeployV1.s.sol --fork-url http://127.0.0.1:8545 --broadcast
    ```
 
    - Replace the RPC URL if necessary.
    - The `--broadcast` flag sends transactions to the network.
 
-Review the contents of `Deploy.s.sol` for details on the deployment order and parameters used for each contract.
+Review the contents of `DeployV1.s.sol` for details on the deployment order and parameters used for each contract.
 
 ---
 
