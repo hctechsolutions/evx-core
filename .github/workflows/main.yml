@@ -31,7 +31,7 @@ jobs:
         id: build
 
       - name: Run Forge tests
-        run: forge test
+        run: forge test --deny-warnings
         id: test
 
   docs:
