@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Permissioned pool actions
 /// @notice Contains pool methods that may only be called by the factory owner
-interface IUniswapV3PoolOwnerActions {
+interface INebularPoolOwnerActions {
     /// @notice Set the denominator of the protocol's % share of the fees
     /// @param feeProtocol0 new protocol fee for token0 of the pool
     /// @param feeProtocol1 new protocol fee for token1 of the pool

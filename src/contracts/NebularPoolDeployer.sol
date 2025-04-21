@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@nebular/interfaces/IUniswapV3PoolDeployer.sol";
+import "@nebular/interfaces/INebularPoolDeployer.sol";
 
-import "@nebular/contracts/UniswapV3Pool.sol";
+import "@nebular/contracts/NebularPool.sol";
 
-contract UniswapV3PoolDeployer is IUniswapV3PoolDeployer {
+contract NebularPoolDeployer is INebularPoolDeployer {
     struct Parameters {
         address factory;
         address token0;
@@ -14,7 +14,7 @@ contract UniswapV3PoolDeployer is IUniswapV3PoolDeployer {
         int24 tickSpacing;
     }
 
-    /// @inheritdoc IUniswapV3PoolDeployer
+    /// @inheritdoc INebularPoolDeployer
     Parameters public override parameters;
 
     /// @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
@@ -32,7 +32,7 @@ contract UniswapV3PoolDeployer is IUniswapV3PoolDeployer {
         int24 tickSpacing
     ) internal returns (address pool) {
         parameters = Parameters({factory: factory, token0: token0, token1: token1, fee: fee, tickSpacing: tickSpacing});
-        pool = address(new UniswapV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
+        pool = address(new NebularPool{salt: keccak256(abi.encode(token0, token1, fee))}());
         delete parameters;
     }
 }
