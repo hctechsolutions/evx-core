@@ -2,14 +2,15 @@
 pragma solidity ^0.8.20;
 
 import "@nebular/interfaces/INebularFactory.sol";
-
 import "@nebular/contracts/NebularPoolDeployer.sol";
 import "@nebular/contracts/NoDelegateCall.sol";
-
 import "@nebular/contracts/NebularPool.sol";
 
-/// @title Canonical Uniswap V3 factory
-/// @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
+/**
+ * @title Canonical Uniswap V3 factory
+ * @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
+ * @dev Implements INebularFactory, extends NebularPoolDeployer for CREATE2 deployment, and adds NoDelegateCall guard
+ */
 contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall {
     /// @inheritdoc INebularFactory
     address public override owner;
@@ -19,6 +20,10 @@ contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall 
     /// @inheritdoc INebularFactory
     mapping(address => mapping(address => mapping(uint24 => address))) public override getPool;
 
+    /**
+     * @notice Initializes the factory setting deployer as owner and default fee tiers
+     * @dev Emits OwnerChanged from zero address and FeeAmountEnabled for each default tier
+     */
     constructor() {
         owner = msg.sender;
         emit OwnerChanged(address(0), msg.sender);

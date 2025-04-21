@@ -28,6 +28,11 @@ import "@nebular/interfaces/callback/INebularMintCallback.sol";
 import "@nebular/interfaces/callback/INebularSwapCallback.sol";
 import "@nebular/interfaces/callback/INebularFlashCallback.sol";
 
+/**
+ * @title NebularPool
+ * @notice Uniswap V3-style pool implementation handling liquidity, swaps, and fees for a token pair
+ * @dev Initializes parameters via INebularPoolDeployer; protected against delegate calls and reentrancy
+ */
 contract NebularPool is INebularPool, NoDelegateCall {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
@@ -58,23 +63,129 @@ contract NebularPool is INebularPool, NoDelegateCall {
     /// @inheritdoc INebularPoolImmutables
     uint128 public immutable override maxLiquidityPerTick;
 
-    struct Slot0 {
-        // the current price
-        uint160 sqrtPriceX96;
-        // the current tick
-        int24 tick;
-        // the most-recently updated index of the observations array
-        uint16 observationIndex;
-        // the current maximum number of observations that are being stored
-        uint16 observationCardinality;
-        // the next maximum number of observations to store, triggered in observations.write
-        uint16 observationCardinalityNext;
-        // the current protocol fee as a percentage of the swap fee taken on withdrawal
-        // represented as an integer denominator (1/x)%
+    /**
+    * @notice Parameters for modifying a liquidity position.
+    * @dev Used when minting or burning liquidity from a given tick range.
+    */
+    struct ModifyPositionParams {
+        /// @notice Address of the position owner.
+        address owner;
+
+        /// @notice Lower bound of the position's tick range.
+        int24 tickLower;
+
+        /// @notice Upper bound of the position's tick range.
+        int24 tickUpper;
+
+        /// @notice Amount of liquidity to add (positive) or remove (negative).
+        int128 liquidityDelta;
+    }
+
+    /**
+    * @notice Stores transient data needed during a swap.
+    * @dev This data is used to cache state during the swap execution loop.
+    */
+    struct SwapCache {
+        /// @notice Protocol fee in effect for the input token.
         uint8 feeProtocol;
-        // whether the pool is locked
+
+        /// @notice Liquidity at the beginning of the swap.
+        uint128 liquidityStart;
+
+        /// @notice Current block timestamp.
+        uint32 blockTimestamp;
+
+        /// @notice Accumulated tick value, updated if a tick is crossed.
+        int56 tickCumulative;
+
+        /// @notice Accumulated seconds per liquidity, updated if a tick is crossed.
+        uint160 secondsPerLiquidityCumulativeX128;
+
+        /// @notice Flag indicating if the cumulative values were already computed.
+        bool computedLatestObservation;
+    }
+
+    /**
+    * @notice Aggregates the current state of an in-progress swap.
+    * @dev This struct is mutated in each step of the swap loop and finalized at the end.
+    */
+    struct SwapState {
+        /// @notice Amount remaining to be swapped in or out.
+        int256 amountSpecifiedRemaining;
+
+        /// @notice Amount of tokens calculated to be received or sent.
+        int256 amountCalculated;
+
+        /// @notice Current sqrt price Q64.96 after this swap step.
+        uint160 sqrtPriceX96;
+
+        /// @notice Tick corresponding to the current sqrt price.
+        int24 tick;
+
+        /// @notice Global fee growth for the input token.
+        uint256 feeGrowthGlobalX128;
+
+        /// @notice Protocol fee accumulated during the swap.
+        uint128 protocolFee;
+
+        /// @notice Current available liquidity within the tick range.
+        uint128 liquidity;
+    }
+
+    /**
+    * @notice Contains temporary variables for a single step in a swap.
+    * @dev Used to perform intermediate calculations during swap iteration.
+    */
+    struct StepComputations {
+        /// @notice Starting sqrt price of the current swap step.
+        uint160 sqrtPriceStartX96;
+
+        /// @notice Next tick to be crossed in the direction of the swap.
+        int24 tickNext;
+
+        /// @notice Indicates whether tickNext is initialized.
+        bool initialized;
+
+        /// @notice Sqrt price at the next tick.
+        uint160 sqrtPriceNextX96;
+
+        /// @notice Amount of input token for this step.
+        uint256 amountIn;
+
+        /// @notice Amount of output token for this step.
+        uint256 amountOut;
+
+        /// @notice Fee amount paid during this step.
+        uint256 feeAmount;
+    }
+
+    /**
+    * @notice Core storage slot used by the pool to track state.
+    * @dev Frequently accessed and modified during swaps and liquidity operations.
+    */
+    struct Slot0 {
+        /// @notice Current sqrt price Q64.96 of the pool.
+        uint160 sqrtPriceX96;
+
+        /// @notice Current tick of the pool.
+        int24 tick;
+
+        /// @notice Index of the last written oracle observation.
+        uint16 observationIndex;
+
+        /// @notice Current max number of stored oracle observations.
+        uint16 observationCardinality;
+
+        /// @notice Target max number of observations to store, pending growth.
+        uint16 observationCardinalityNext;
+
+        /// @notice Protocol fee encoded as an integer divisor of the swap fee.
+        uint8 feeProtocol;
+
+        /// @notice Indicates whether the pool is unlocked and reentrancy-safe.
         bool unlocked;
     }
+
     /// @inheritdoc INebularPoolState
     Slot0 public override slot0;
 
@@ -103,9 +214,10 @@ contract NebularPool is INebularPool, NoDelegateCall {
     /// @inheritdoc INebularPoolState
     Oracle.Observation[65535] public override observations;
 
-    /// @dev Mutually exclusive reentrancy protection into the pool to/from a method. This method also prevents entrance
-    /// to a function before the pool is initialized. The reentrancy guard is required throughout the contract because
-    /// we use balance checks to determine the payment status of interactions such as mint, swap and flash.
+    /**
+     * @notice Modifier to protect functions from reentrancy and enforce pool initialization
+     * @dev Ensures mutual exclusion and verifies that the pool is initialized
+     */    
     modifier lock() {
         require(slot0.unlocked, 'LOK');
         slot0.unlocked = false;
@@ -113,7 +225,10 @@ contract NebularPool is INebularPool, NoDelegateCall {
         slot0.unlocked = true;
     }
 
-    /// @dev Prevents calling a function from anyone except the address returned by INebularFactory#owner()
+    /**
+     * @notice Modifier to restrict function access to the factory owner
+     * @dev Validates the caller against the factory's owner address
+     */    
     modifier onlyFactoryOwner() {
         require(msg.sender == INebularFactory(factory).owner());
         _;
@@ -127,21 +242,32 @@ contract NebularPool is INebularPool, NoDelegateCall {
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(_tickSpacing);
     }
 
-    /// @dev Common checks for valid tick inputs.
+    /**
+     * @notice Validates a tick range
+     * @dev Ensures tickLower < tickUpper and that both are within valid tick bounds
+     * @param tickLower The lower tick
+     * @param tickUpper The upper tick
+     */
     function checkTicks(int24 tickLower, int24 tickUpper) private pure {
         require(tickLower < tickUpper, 'TLU');
         require(tickLower >= TickMath.MIN_TICK, 'TLM');
         require(tickUpper <= TickMath.MAX_TICK, 'TUM');
     }
 
-    /// @dev Returns the block timestamp truncated to 32 bits, i.e. mod 2**32. This method is overridden in tests.
+    /**
+     * @notice Returns the block timestamp truncated to 32 bits
+     * @dev Used to ensure compatibility with uint32 timestamps
+     * @return The current block timestamp truncated to uint32
+     */
     function _blockTimestamp() internal view virtual returns (uint32) {
         return uint32(block.timestamp); // truncation is desired
     }
 
-    /// @dev Get the pool's balance of token0
-    /// @dev This function is gas optimized to avoid a redundant extcodesize check in addition to the returndatasize
-    /// check
+    /**
+     * @notice Gets the current balance of token0 held by the pool
+     * @dev Uses staticcall to avoid extcodesize overhead
+     * @return The token0 balance
+     */
     function balance0() private view returns (uint256) {
         (bool success, bytes memory data) =
             token0.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
@@ -149,9 +275,11 @@ contract NebularPool is INebularPool, NoDelegateCall {
         return abi.decode(data, (uint256));
     }
 
-    /// @dev Get the pool's balance of token1
-    /// @dev This function is gas optimized to avoid a redundant extcodesize check in addition to the returndatasize
-    /// check
+    /**
+     * @notice Gets the current balance of token1 held by the pool
+     * @dev Uses staticcall to avoid extcodesize overhead
+     * @return The token1 balance
+     */
     function balance1() private view returns (uint256) {
         (bool success, bytes memory data) =
             token1.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
@@ -293,21 +421,14 @@ contract NebularPool is INebularPool, NoDelegateCall {
         emit Initialize(sqrtPriceX96, tick);
     }
 
-    struct ModifyPositionParams {
-        // the address that owns the position
-        address owner;
-        // the lower and upper tick of the position
-        int24 tickLower;
-        int24 tickUpper;
-        // any change in liquidity
-        int128 liquidityDelta;
-    }
-
-    /// @dev Effect some changes to a position
-    /// @param params the position details and the change to the position's liquidity to effect
-    /// @return position a storage pointer referencing the position with the given owner and tick range
-    /// @return amount0 the amount of token0 owed to the pool, negative if the pool should pay the recipient
-    /// @return amount1 the amount of token1 owed to the pool, negative if the pool should pay the recipient
+    /**
+     * @notice Internal function to modify a liquidity position
+     * @dev Computes and updates a position, handles tick updates
+     * @param params Struct containing position owner, tick range, and liquidity delta
+     * @return position The updated position storage pointer
+     * @return amount0 Delta of token0 due to position change
+     * @return amount1 Delta of token1 due to position change
+     */
     function _modifyPosition(ModifyPositionParams memory params)
         private
         noDelegateCall
@@ -376,11 +497,16 @@ contract NebularPool is INebularPool, NoDelegateCall {
         }
     }
 
-    /// @dev Gets and updates a position with the given liquidity delta
-    /// @param owner the owner of the position
-    /// @param tickLower the lower tick of the position's tick range
-    /// @param tickUpper the upper tick of the position's tick range
-    /// @param tick the current tick, passed to avoid sloads
+    /**
+     * @notice Updates a position's liquidity and fees
+     * @dev Performs tick initialization, updates fee growth, and adjusts liquidity
+     * @param owner Position owner
+     * @param tickLower Lower tick of the position
+     * @param tickUpper Upper tick of the position
+     * @param liquidityDelta Amount of liquidity to change
+     * @param tick Current pool tick
+     * @return position Updated position reference
+     */
     function _updatePosition(
         address owner,
         int24 tickLower,
@@ -548,56 +674,6 @@ contract NebularPool is INebularPool, NoDelegateCall {
         }
 
         emit Burn(msg.sender, tickLower, tickUpper, amount, amount0, amount1);
-    }
-
-    struct SwapCache {
-        // the protocol fee for the input token
-        uint8 feeProtocol;
-        // liquidity at the beginning of the swap
-        uint128 liquidityStart;
-        // the timestamp of the current block
-        uint32 blockTimestamp;
-        // the current value of the tick accumulator, computed only if we cross an initialized tick
-        int56 tickCumulative;
-        // the current value of seconds per liquidity accumulator, computed only if we cross an initialized tick
-        uint160 secondsPerLiquidityCumulativeX128;
-        // whether we've computed and cached the above two accumulators
-        bool computedLatestObservation;
-    }
-
-    // the top level state of the swap, the results of which are recorded in storage at the end
-    struct SwapState {
-        // the amount remaining to be swapped in/out of the input/output asset
-        int256 amountSpecifiedRemaining;
-        // the amount already swapped out/in of the output/input asset
-        int256 amountCalculated;
-        // current sqrt(price)
-        uint160 sqrtPriceX96;
-        // the tick associated with the current price
-        int24 tick;
-        // the global fee growth of the input token
-        uint256 feeGrowthGlobalX128;
-        // amount of input token paid as protocol fee
-        uint128 protocolFee;
-        // the current liquidity in range
-        uint128 liquidity;
-    }
-
-    struct StepComputations {
-        // the price at the beginning of the step
-        uint160 sqrtPriceStartX96;
-        // the next tick to swap to from the current tick in the swap direction
-        int24 tickNext;
-        // whether tickNext is initialized or not
-        bool initialized;
-        // sqrt(price) for the next tick (1/0)
-        uint160 sqrtPriceNextX96;
-        // how much is being swapped in in this step
-        uint256 amountIn;
-        // how much is being swapped out
-        uint256 amountOut;
-        // how much fee is being paid in
-        uint256 feeAmount;
     }
 
     /// @inheritdoc INebularPoolActions

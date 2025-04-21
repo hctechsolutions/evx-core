@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title INebularToken
-/// @notice Interface for the Nebular token contract with voting and permit capabilities.
+/**
+ * @title INebularToken
+ * @notice Interface for the Nebular token contract with voting and permit capabilities.
+ */
 interface INebularToken {
     /**
      * @notice Emitted when an account is automatically self-delegated upon first token receipt.

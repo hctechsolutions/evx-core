@@ -1,20 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title Permissioned pool actions
-/// @notice Contains pool methods that may only be called by the factory owner
+/**
+ * @title Permissioned pool actions
+ * @notice Contains pool methods restricted to the factory owner for managing protocol fees
+ */
 interface INebularPoolOwnerActions {
-    /// @notice Set the denominator of the protocol's % share of the fees
-    /// @param feeProtocol0 new protocol fee for token0 of the pool
-    /// @param feeProtocol1 new protocol fee for token1 of the pool
+    /**
+     * @notice Sets the denominator of the protocol's share of the fees for each token
+     * @dev feeProtocol values represent the inverse of the percentage taken, e.g., a value of 4 means a 25% share
+     * @param feeProtocol0 New protocol fee denominator for token0 of the pool
+     * @param feeProtocol1 New protocol fee denominator for token1 of the pool
+     */
     function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external;
 
-    /// @notice Collect the protocol fee accrued to the pool
-    /// @param recipient The address to which collected protocol fees should be sent
-    /// @param amount0Requested The maximum amount of token0 to send, can be 0 to collect fees in only token1
-    /// @param amount1Requested The maximum amount of token1 to send, can be 0 to collect fees in only token0
-    /// @return amount0 The protocol fee collected in token0
-    /// @return amount1 The protocol fee collected in token1
+    /**
+     * @notice Collects the accumulated protocol fees from the pool
+     * @dev Only callable by the factory owner; token amounts paid will not exceed requested amounts
+     * @param recipient Address to which collected protocol fees should be sent
+     * @param amount0Requested Maximum amount of token0 to withdraw, set to 0 to skip token0
+     * @param amount1Requested Maximum amount of token1 to withdraw, set to 0 to skip token1
+     * @return amount0 The protocol fee collected in token0 and sent to `recipient`
+     * @return amount1 The protocol fee collected in token1 and sent to `recipient`
+     */
     function collectProtocol(
         address recipient,
         uint128 amount0Requested,

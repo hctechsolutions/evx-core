@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title Events emitted by a pool
-/// @notice Contains all events emitted by the pool
+/**
+ * @title Events emitted by a pool
+ * @notice Contains all events emitted by the pool for tracking state changes and interactions
+ */
 interface INebularPoolEvents {
-    /// @notice Emitted exactly once by a pool when #initialize is first called on the pool
-    /// @dev Mint/Burn/Swap cannot be emitted by the pool before Initialize
-    /// @param sqrtPriceX96 The initial sqrt price of the pool, as a Q64.96
-    /// @param tick The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool
+    /**
+     * @notice Emitted exactly once by a pool when #initialize is first called on the pool
+     * @dev Mint, Burn, and Swap cannot be emitted before Initialize. Represents initial setup of price and tick.
+     * @param sqrtPriceX96 The initial sqrt price of the pool as a Q64.96 value
+     * @param tick The initial tick of the pool (log base 1.0001 of the starting price)
+     */
     event Initialize(uint160 sqrtPriceX96, int24 tick);
 
-    /// @notice Emitted when liquidity is minted for a given position
-    /// @param sender The address that minted the liquidity
-    /// @param owner The owner of the position and recipient of any minted liquidity
-    /// @param tickLower The lower tick of the position
-    /// @param tickUpper The upper tick of the position
-    /// @param amount The amount of liquidity minted to the position range
-    /// @param amount0 How much token0 was required for the minted liquidity
-    /// @param amount1 How much token1 was required for the minted liquidity
+    /**
+     * @notice Emitted when liquidity is minted for a given position
+     * @param sender The address that minted the liquidity
+     * @param owner The owner of the position and recipient of any minted liquidity
+     * @param tickLower The lower tick boundary of the position
+     * @param tickUpper The upper tick boundary of the position
+     * @param amount The amount of liquidity minted
+     * @param amount0 The amount of token0 required for the minted liquidity
+     * @param amount1 The amount of token1 required for the minted liquidity
+     */
     event Mint(
         address sender,
         address indexed owner,
@@ -28,13 +34,16 @@ interface INebularPoolEvents {
         uint256 amount1
     );
 
-    /// @notice Emitted when fees are collected by the owner of a position
-    /// @dev Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees
-    /// @param owner The owner of the position for which fees are collected
-    /// @param tickLower The lower tick of the position
-    /// @param tickUpper The upper tick of the position
-    /// @param amount0 The amount of token0 fees collected
-    /// @param amount1 The amount of token1 fees collected
+    /**
+     * @notice Emitted when fees are collected by the owner of a position
+     * @dev May be emitted with zero amounts if caller chooses not to collect
+     * @param owner The owner of the position for which fees are collected
+     * @param recipient The address that receives the collected fees
+     * @param tickLower The lower tick boundary of the position
+     * @param tickUpper The upper tick boundary of the position
+     * @param amount0 The amount of token0 fees collected
+     * @param amount1 The amount of token1 fees collected
+     */
     event Collect(
         address indexed owner,
         address recipient,
@@ -44,14 +53,16 @@ interface INebularPoolEvents {
         uint128 amount1
     );
 
-    /// @notice Emitted when a position's liquidity is removed
-    /// @dev Does not withdraw any fees earned by the liquidity position, which must be withdrawn via #collect
-    /// @param owner The owner of the position for which liquidity is removed
-    /// @param tickLower The lower tick of the position
-    /// @param tickUpper The upper tick of the position
-    /// @param amount The amount of liquidity to remove
-    /// @param amount0 The amount of token0 withdrawn
-    /// @param amount1 The amount of token1 withdrawn
+    /**
+     * @notice Emitted when a position's liquidity is removed (burned)
+     * @dev Does not withdraw fees, which must be collected separately via #collect
+     * @param owner The owner of the position
+     * @param tickLower The lower tick boundary of the position
+     * @param tickUpper The upper tick boundary of the position
+     * @param amount The amount of liquidity removed
+     * @param amount0 The amount of token0 withdrawn
+     * @param amount1 The amount of token1 withdrawn
+     */
     event Burn(
         address indexed owner,
         int24 indexed tickLower,
@@ -61,14 +72,16 @@ interface INebularPoolEvents {
         uint256 amount1
     );
 
-    /// @notice Emitted by the pool for any swaps between token0 and token1
-    /// @param sender The address that initiated the swap call, and that received the callback
-    /// @param recipient The address that received the output of the swap
-    /// @param amount0 The delta of the token0 balance of the pool
-    /// @param amount1 The delta of the token1 balance of the pool
-    /// @param sqrtPriceX96 The sqrt(price) of the pool after the swap, as a Q64.96
-    /// @param liquidity The liquidity of the pool after the swap
-    /// @param tick The log base 1.0001 of price of the pool after the swap
+    /**
+     * @notice Emitted by the pool for any swaps between token0 and token1
+     * @param sender The address that initiated the swap and received the callback
+     * @param recipient The address that received the output of the swap
+     * @param amount0 The delta of token0 balance of the pool (exact when negative, minimum when positive)
+     * @param amount1 The delta of token1 balance of the pool (exact when negative, minimum when positive)
+     * @param sqrtPriceX96 The sqrt(price) of the pool after the swap as a Q64.96 value
+     * @param liquidity The liquidity of the pool after the swap
+     * @param tick The tick of the pool after the swap (log base 1.0001 of price)
+     */
     event Swap(
         address indexed sender,
         address indexed recipient,
@@ -79,13 +92,15 @@ interface INebularPoolEvents {
         int24 tick
     );
 
-    /// @notice Emitted by the pool for any flashes of token0/token1
-    /// @param sender The address that initiated the swap call, and that received the callback
-    /// @param recipient The address that received the tokens from flash
-    /// @param amount0 The amount of token0 that was flashed
-    /// @param amount1 The amount of token1 that was flashed
-    /// @param paid0 The amount of token0 paid for the flash, which can exceed the amount0 plus the fee
-    /// @param paid1 The amount of token1 paid for the flash, which can exceed the amount1 plus the fee
+    /**
+     * @notice Emitted by the pool for any flashes of token0/token1
+     * @param sender The address that initiated the flash and received the callback
+     * @param recipient The address that received the flashed tokens
+     * @param amount0 The amount of token0 that was flashed
+     * @param amount1 The amount of token1 that was flashed
+     * @param paid0 The amount of token0 paid back (may exceed amount0 plus fee)
+     * @param paid1 The amount of token1 paid back (may exceed amount1 plus fee)
+     */
     event Flash(
         address indexed sender,
         address indexed recipient,
@@ -95,27 +110,42 @@ interface INebularPoolEvents {
         uint256 paid1
     );
 
-    /// @notice Emitted by the pool for increases to the number of observations that can be stored
-    /// @dev observationCardinalityNext is not the observation cardinality until an observation is written at the index
-    /// just before a mint/swap/burn.
-    /// @param observationCardinalityNextOld The previous value of the next observation cardinality
-    /// @param observationCardinalityNextNew The updated value of the next observation cardinality
+    /**
+     * @notice Emitted when the maximum number of stored observations is increased
+     * @dev observationCardinalityNext is applied on the next write after this event
+     * @param observationCardinalityNextOld The previous target number of observations
+     * @param observationCardinalityNextNew The new target number of observations
+     */
     event IncreaseObservationCardinalityNext(
         uint16 observationCardinalityNextOld,
         uint16 observationCardinalityNextNew
     );
 
-    /// @notice Emitted when the protocol fee is changed by the pool
-    /// @param feeProtocol0Old The previous value of the token0 protocol fee
-    /// @param feeProtocol1Old The previous value of the token1 protocol fee
-    /// @param feeProtocol0New The updated value of the token0 protocol fee
-    /// @param feeProtocol1New The updated value of the token1 protocol fee
-    event SetFeeProtocol(uint8 feeProtocol0Old, uint8 feeProtocol1Old, uint8 feeProtocol0New, uint8 feeProtocol1New);
+    /**
+     * @notice Emitted when the protocol fee is changed by the pool
+     * @param feeProtocol0Old The previous token0 protocol fee
+     * @param feeProtocol1Old The previous token1 protocol fee
+     * @param feeProtocol0New The updated token0 protocol fee
+     * @param feeProtocol1New The updated token1 protocol fee
+     */
+    event SetFeeProtocol(
+        uint8 feeProtocol0Old,
+        uint8 feeProtocol1Old,
+        uint8 feeProtocol0New,
+        uint8 feeProtocol1New
+    );
 
-    /// @notice Emitted when the collected protocol fees are withdrawn by the factory owner
-    /// @param sender The address that collects the protocol fees
-    /// @param recipient The address that receives the collected protocol fees
-    /// @param amount0 The amount of token0 protocol fees that is withdrawn
-    /// @param amount0 The amount of token1 protocol fees that is withdrawn
-    event CollectProtocol(address indexed sender, address indexed recipient, uint128 amount0, uint128 amount1);
+    /**
+     * @notice Emitted when the collected protocol fees are withdrawn by the factory owner
+     * @param sender The address that collects the protocol fees
+     * @param recipient The address that receives the collected protocol fees
+     * @param amount0 The amount of token0 protocol fees withdrawn
+     * @param amount1 The amount of token1 protocol fees withdrawn
+     */
+    event CollectProtocol(
+        address indexed sender,
+        address indexed recipient,
+        uint128 amount0,
+        uint128 amount1
+    );
 }

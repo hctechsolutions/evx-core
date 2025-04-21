@@ -1,35 +1,49 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title Pool state that never changes
-/// @notice These parameters are fixed for a pool forever, i.e., the methods will always return the same values
+/**
+ * @title Pool state that never changes
+ * @notice These parameters are fixed for a pool forever; the methods will always return the same values
+ */
 interface INebularPoolImmutables {
-    /// @notice The contract that deployed the pool, which must adhere to the INebularFactory interface
-    /// @return The contract address
+    /**
+     * @notice Returns the contract that deployed the pool
+     * @dev The deployer must adhere to the INebularFactory interface
+     * @return The factory contract address
+     */
     function factory() external view returns (address);
 
-    /// @notice The first of the two tokens of the pool, sorted by address
-    /// @return The token contract address
+    /**
+     * @notice Returns the first of the two tokens of the pool, sorted by address
+     * @return The token0 contract address
+     */
     function token0() external view returns (address);
 
-    /// @notice The second of the two tokens of the pool, sorted by address
-    /// @return The token contract address
+    /**
+     * @notice Returns the second of the two tokens of the pool, sorted by address
+     * @return The token1 contract address
+     */
     function token1() external view returns (address);
 
-    /// @notice The pool's fee in hundredths of a bip, i.e. 1e-6
-    /// @return The fee
+    /**
+     * @notice Returns the pool's fee in hundredths of a bip
+     * @dev Represented as 1e-6 of the swap amount
+     * @return The fee tier
+     */
     function fee() external view returns (uint24);
 
-    /// @notice The pool tick spacing
-    /// @dev Ticks can only be used at multiples of this value, minimum of 1 and always positive
-    /// e.g.: a tickSpacing of 3 means ticks can be initialized every 3rd tick, i.e., ..., -6, -3, 0, 3, 6, ...
-    /// This value is an int24 to avoid casting even though it is always positive.
-    /// @return The tick spacing
+    /**
+     * @notice Returns the pool tick spacing
+     * @dev Ticks can only be initialized at multiples of this value; minimum of 1 and always positive
+     *      For example, a tickSpacing of 3 allows ticks at ..., -6, -3, 0, 3, 6, ...
+     * @return The tick spacing as an int24
+     */
     function tickSpacing() external view returns (int24);
 
-    /// @notice The maximum amount of position liquidity that can use any tick in the range
-    /// @dev This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
-    /// also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool
-    /// @return The max amount of liquidity per tick
+    /**
+     * @notice Returns the maximum amount of position liquidity that can use any tick in the range
+     * @dev Enforced per tick to prevent overflow of uint128 and to restrict out-of-range liquidity
+     * @return The max liquidity per tick
+     */
     function maxLiquidityPerTick() external view returns (uint128);
 }

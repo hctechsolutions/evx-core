@@ -5,28 +5,42 @@ import "./FullMath.sol";
 import "./FixedPoint128.sol";
 import "./LiquidityMath.sol";
 
-/// @title Position
-/// @notice Positions represent an owner address' liquidity between a lower and upper tick boundary
-/// @dev Positions store additional state for tracking fees owed to the position
+/**
+ * @title Position
+ * @notice Library for managing liquidity positions within tick boundaries.
+ * @dev Each position is uniquely identified by owner and tick range, and stores fee and liquidity metadata.
+ */
 library Position {
-    // info stored for each user's position
+    /**
+     * @notice Stores data associated with a single liquidity position.
+     * @dev Tracks liquidity, fee growth snapshots, and tokens owed for later collection.
+     */
     struct Info {
-        // the amount of liquidity owned by this position
+        /// @notice The amount of liquidity held by this position.
         uint128 liquidity;
-        // fee growth per unit of liquidity as of the last update to liquidity or fees owed
+
+        /// @notice The fee growth in token0 inside the tick range as of the last update.
         uint256 feeGrowthInside0LastX128;
+
+        /// @notice The fee growth in token1 inside the tick range as of the last update.
         uint256 feeGrowthInside1LastX128;
-        // the fees owed to the position owner in token0/token1
+
+        /// @notice The amount of token0 owed to the position owner.
         uint128 tokensOwed0;
+
+        /// @notice The amount of token1 owed to the position owner.
         uint128 tokensOwed1;
     }
 
-    /// @notice Returns the Info struct of a position, given an owner and position boundaries
-    /// @param self The mapping containing all user positions
-    /// @param owner The address of the position owner
-    /// @param tickLower The lower tick boundary of the position
-    /// @param tickUpper The upper tick boundary of the position
-    /// @return position The position info struct of the given owners' position
+    /**
+     * @notice Retrieves the position info for a given owner and tick range.
+     * @dev The key is derived as a keccak256 hash of (owner, tickLower, tickUpper).
+     * @param self The mapping of all positions.
+     * @param owner The address of the position owner.
+     * @param tickLower The lower tick boundary of the position.
+     * @param tickUpper The upper tick boundary of the position.
+     * @return position The storage pointer to the position's data.
+     */
     function get(
         mapping(bytes32 => Info) storage self,
         address owner,
@@ -36,11 +50,14 @@ library Position {
         position = self[keccak256(abi.encodePacked(owner, tickLower, tickUpper))];
     }
 
-    /// @notice Credits accumulated fees to a user's position
-    /// @param self The individual position to update
-    /// @param liquidityDelta The change in pool liquidity as a result of the position update
-    /// @param feeGrowthInside0X128 The all-time fee growth in token0, per unit of liquidity, inside the position's tick boundaries
-    /// @param feeGrowthInside1X128 The all-time fee growth in token1, per unit of liquidity, inside the position's tick boundaries
+    /**
+     * @notice Updates a position with new liquidity and credits any accrued fees.
+     * @dev Also updates the position's fee growth snapshot and tokens owed.
+     * @param self The position to update.
+     * @param liquidityDelta The change in liquidity (positive to add, negative to remove).
+     * @param feeGrowthInside0X128 The current cumulative fee growth for token0 within the tick range.
+     * @param feeGrowthInside1X128 The current cumulative fee growth for token1 within the tick range.
+     */
     function update(
         Info storage self,
         int128 liquidityDelta,
@@ -51,13 +68,13 @@ library Position {
 
         uint128 liquidityNext;
         if (liquidityDelta == 0) {
-            require(_self.liquidity > 0, 'NP'); // disallow pokes for 0 liquidity positions
+            require(_self.liquidity > 0, "NP"); // Prevents updates to positions with zero liquidity.
             liquidityNext = _self.liquidity;
         } else {
             liquidityNext = LiquidityMath.addDelta(_self.liquidity, liquidityDelta);
         }
 
-        // calculate accumulated fees
+        // Calculate fees owed since the last update.
         uint128 tokensOwed0 =
             uint128(
                 FullMath.mulDiv(
@@ -75,12 +92,11 @@ library Position {
                 )
             );
 
-        // update the position
+        // Apply updates to the position.
         if (liquidityDelta != 0) self.liquidity = liquidityNext;
         self.feeGrowthInside0LastX128 = feeGrowthInside0X128;
         self.feeGrowthInside1LastX128 = feeGrowthInside1X128;
         if (tokensOwed0 > 0 || tokensOwed1 > 0) {
-            // overflow is acceptable, have to withdraw before you hit type(uint128).max fees
             self.tokensOwed0 += tokensOwed0;
             self.tokensOwed1 += tokensOwed1;
         }

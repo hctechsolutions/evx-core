@@ -4,8 +4,10 @@ pragma solidity ^0.8.20;
 import { INebularToken } from "@nebular/interfaces/governance/INebularToken.sol";
 import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
 
-/// @title Interface for Nebular Governance
-/// @notice Defines the external API of the INebularGovernance contract
+/*
+ * @title Interface for Nebular Governance
+ * @notice Defines the external API of the INebularGovernance contract
+ */
 interface INebularGovernance is IGovernor {
     /**
      * @notice Returns the governance token used for voting.
@@ -79,5 +81,4 @@ interface INebularGovernance is IGovernor {
     * @return proposalState The state of the proposal (e.g., Pending, Active, Canceled, etc.).
     */
     function state(uint256 proposalId) external view returns (ProposalState proposalState);
-
 }

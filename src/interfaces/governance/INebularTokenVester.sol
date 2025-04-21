@@ -3,8 +3,10 @@ pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @title INebularTokenVester
-/// @notice Interface for the TokenVester vesting contract handling configurable release schedules.
+/**
+ * @title INebularTokenVester
+ * @notice Interface for the TokenVester vesting contract handling configurable release schedules.
+ */
 interface INebularTokenVester {
     /**
      * @notice Emitted when vested tokens are released to the beneficiary.

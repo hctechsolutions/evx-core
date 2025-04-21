@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title BitMath
-/// @dev This library provides functionality for computing bit properties of an unsigned integer
+/**
+ * @title BitMath
+ * @notice Library for efficiently computing bit-level properties of unsigned integers.
+ * @dev Provides functions to determine the index of the most and least significant bits set to 1.
+ */
 library BitMath {
-    /// @notice Returns the index of the most significant bit of the number,
-    ///     where the least significant bit is at index 0 and the most significant bit is at index 255
-    /// @dev The function satisfies the property:
-    ///     x >= 2**mostSignificantBit(x) and x < 2**(mostSignificantBit(x)+1)
-    /// @param x the value for which to compute the most significant bit, must be greater than 0
-    /// @return r the index of the most significant bit
+    /**
+     * @notice Computes the index of the most significant bit of a positive integer.
+     * @dev Index ranges from 0 (least significant bit) to 255 (most significant bit).
+     *      For a given x, the result satisfies: 2**r <= x < 2**(r+1).
+     * @param x The input value. Must be greater than 0.
+     * @return r The index of the most significant bit set to 1.
+     */
     function mostSignificantBit(uint256 x) internal pure returns (uint8 r) {
         require(x > 0);
 
@@ -44,12 +48,15 @@ library BitMath {
         if (x >= 0x2) r += 1;
     }
 
-    /// @notice Returns the index of the least significant bit of the number,
-    ///     where the least significant bit is at index 0 and the most significant bit is at index 255
-    /// @dev The function satisfies the property:
-    ///     (x & 2**leastSignificantBit(x)) != 0 and (x & (2**(leastSignificantBit(x)) - 1)) == 0)
-    /// @param x the value for which to compute the least significant bit, must be greater than 0
-    /// @return r the index of the least significant bit
+    /**
+     * @notice Computes the index of the least significant bit of a positive integer.
+     * @dev Index ranges from 0 (least significant bit) to 255 (most significant bit).
+     *      For a given x, the result satisfies:
+     *      - (x & 2**r) != 0
+     *      - (x & (2**r - 1)) == 0
+     * @param x The input value. Must be greater than 0.
+     * @return r The index of the least significant bit set to 1.
+     */
     function leastSignificantBit(uint256 x) internal pure returns (uint8 r) {
         require(x > 0);
 

@@ -7,40 +7,48 @@ import "./SafeCast.sol";
 import "./TickMath.sol";
 import "./LiquidityMath.sol";
 
-/// @title Tick
-/// @notice Contains functions for managing tick processes and relevant calculations
+/**
+ * @title Tick
+ * @notice Library for managing tick data and associated calculations in a liquidity pool.
+ */
 library Tick {
     using LowGasSafeMath for int256;
     using SafeCast for int256;
 
-    // info stored for each initialized individual tick
+    /**
+     * @notice Structure representing all state associated with a tick.
+     */
     struct Info {
-        // the total position liquidity that references this tick
+        /// @notice Total position liquidity referencing this tick.
         uint128 liquidityGross;
-        // amount of net liquidity added (subtracted) when tick is crossed from left to right (right to left),
+
+        /// @notice Net liquidity change when crossing this tick from left to right.
         int128 liquidityNet;
-        // fee growth per unit of liquidity on the _other_ side of this tick (relative to the current tick)
-        // only has relative meaning, not absolute — the value depends on when the tick is initialized
+
+        /// @notice Cumulative fee growth on the opposite side of this tick for token0.
         uint256 feeGrowthOutside0X128;
+
+        /// @notice Cumulative fee growth on the opposite side of this tick for token1.
         uint256 feeGrowthOutside1X128;
-        // the cumulative tick value on the other side of the tick
+
+        /// @notice Cumulative tick value outside this tick.
         int56 tickCumulativeOutside;
-        // the seconds per unit of liquidity on the _other_ side of this tick (relative to the current tick)
-        // only has relative meaning, not absolute — the value depends on when the tick is initialized
+
+        /// @notice Seconds per unit of liquidity outside this tick.
         uint160 secondsPerLiquidityOutsideX128;
-        // the seconds spent on the other side of the tick (relative to the current tick)
-        // only has relative meaning, not absolute — the value depends on when the tick is initialized
+
+        /// @notice Time spent outside this tick.
         uint32 secondsOutside;
-        // true iff the tick is initialized, i.e. the value is exactly equivalent to the expression liquidityGross != 0
-        // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
+
+        /// @notice Whether the tick is initialized (i.e., has non-zero liquidityGross).
         bool initialized;
     }
 
-    /// @notice Derives max liquidity per tick from given tick spacing
-    /// @dev Executed within the pool constructor
-    /// @param tickSpacing The amount of required tick separation, realized in multiples of `tickSpacing`
-    ///     e.g., a tickSpacing of 3 requires ticks to be initialized every 3rd tick i.e., ..., -6, -3, 0, 3, 6, ...
-    /// @return The max liquidity per tick
+    /**
+     * @notice Computes the maximum liquidity per tick for a given spacing.
+     * @param tickSpacing The spacing between usable ticks.
+     * @return The maximum liquidity that can be assigned to a single tick.
+     */
     function tickSpacingToMaxLiquidityPerTick(int24 tickSpacing) internal pure returns (uint128) {
         int24 minTick = (TickMath.MIN_TICK / tickSpacing) * tickSpacing;
         int24 maxTick = (TickMath.MAX_TICK / tickSpacing) * tickSpacing;
@@ -48,15 +56,17 @@ library Tick {
         return type(uint128).max / numTicks;
     }
 
-    /// @notice Retrieves fee growth data
-    /// @param self The mapping containing all tick information for initialized ticks
-    /// @param tickLower The lower tick boundary of the position
-    /// @param tickUpper The upper tick boundary of the position
-    /// @param tickCurrent The current tick
-    /// @param feeGrowthGlobal0X128 The all-time global fee growth, per unit of liquidity, in token0
-    /// @param feeGrowthGlobal1X128 The all-time global fee growth, per unit of liquidity, in token1
-    /// @return feeGrowthInside0X128 The all-time fee growth in token0, per unit of liquidity, inside the position's tick boundaries
-    /// @return feeGrowthInside1X128 The all-time fee growth in token1, per unit of liquidity, inside the position's tick boundaries
+    /**
+     * @notice Calculates the fee growth inside a position's tick range.
+     * @param self Mapping of tick info.
+     * @param tickLower The lower bound of the position.
+     * @param tickUpper The upper bound of the position.
+     * @param tickCurrent The current pool tick.
+     * @param feeGrowthGlobal0X128 Global fee growth for token0.
+     * @param feeGrowthGlobal1X128 Global fee growth for token1.
+     * @return feeGrowthInside0X128 Fee growth for token0 inside the position.
+     * @return feeGrowthInside1X128 Fee growth for token1 inside the position.
+     */
     function getFeeGrowthInside(
         mapping(int24 => Tick.Info) storage self,
         int24 tickLower,
@@ -94,19 +104,21 @@ library Tick {
         feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
     }
 
-    /// @notice Updates a tick and returns true if the tick was flipped from initialized to uninitialized, or vice versa
-    /// @param self The mapping containing all tick information for initialized ticks
-    /// @param tick The tick that will be updated
-    /// @param tickCurrent The current tick
-    /// @param liquidityDelta A new amount of liquidity to be added (subtracted) when tick is crossed from left to right (right to left)
-    /// @param feeGrowthGlobal0X128 The all-time global fee growth, per unit of liquidity, in token0
-    /// @param feeGrowthGlobal1X128 The all-time global fee growth, per unit of liquidity, in token1
-    /// @param secondsPerLiquidityCumulativeX128 The all-time seconds per max(1, liquidity) of the pool
-    /// @param tickCumulative The tick * time elapsed since the pool was first initialized
-    /// @param time The current block timestamp cast to a uint32
-    /// @param upper true for updating a position's upper tick, or false for updating a position's lower tick
-    /// @param maxLiquidity The maximum liquidity allocation for a single tick
-    /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
+    /**
+     * @notice Updates the state of a given tick and returns whether it was flipped.
+     * @param self Mapping of tick info.
+     * @param tick The tick index to update.
+     * @param tickCurrent The current tick of the pool.
+     * @param liquidityDelta Change in liquidity at this tick.
+     * @param feeGrowthGlobal0X128 Global fee growth for token0.
+     * @param feeGrowthGlobal1X128 Global fee growth for token1.
+     * @param secondsPerLiquidityCumulativeX128 Seconds per liquidity value.
+     * @param tickCumulative The cumulative tick value.
+     * @param time Current block timestamp.
+     * @param upper Whether this is the upper tick of a position.
+     * @param maxLiquidity Maximum allowed liquidity per tick.
+     * @return flipped True if the tick was initialized or de-initialized.
+     */
     function update(
         mapping(int24 => Tick.Info) storage self,
         int24 tick,
@@ -149,22 +161,26 @@ library Tick {
             : int256(info.liquidityNet).add(liquidityDelta).toInt128();
     }
 
-    /// @notice Clears tick data
-    /// @param self The mapping containing all initialized tick information for initialized ticks
-    /// @param tick The tick that will be cleared
+    /**
+     * @notice Clears all state for a tick.
+     * @param self Mapping of tick info.
+     * @param tick The tick index to clear.
+     */
     function clear(mapping(int24 => Tick.Info) storage self, int24 tick) internal {
         delete self[tick];
     }
 
-    /// @notice Transitions to next tick as needed by price movement
-    /// @param self The mapping containing all tick information for initialized ticks
-    /// @param tick The destination tick of the transition
-    /// @param feeGrowthGlobal0X128 The all-time global fee growth, per unit of liquidity, in token0
-    /// @param feeGrowthGlobal1X128 The all-time global fee growth, per unit of liquidity, in token1
-    /// @param secondsPerLiquidityCumulativeX128 The current seconds per liquidity
-    /// @param tickCumulative The tick * time elapsed since the pool was first initialized
-    /// @param time The current block.timestamp
-    /// @return liquidityNet The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
+    /**
+     * @notice Called when the pool's price crosses a tick.
+     * @param self Mapping of tick info.
+     * @param tick The tick being crossed.
+     * @param feeGrowthGlobal0X128 Global fee growth for token0.
+     * @param feeGrowthGlobal1X128 Global fee growth for token1.
+     * @param secondsPerLiquidityCumulativeX128 Global seconds per liquidity.
+     * @param tickCumulative The cumulative tick value.
+     * @param time The current timestamp.
+     * @return liquidityNet The liquidity change from crossing this tick.
+     */
     function cross(
         mapping(int24 => Tick.Info) storage self,
         int24 tick,

@@ -4,20 +4,27 @@ pragma solidity ^0.8.20;
 import "./FullMath.sol";
 import "./SqrtPriceMath.sol";
 
-/// @title Computes the result of a swap within ticks
-/// @notice Contains methods for computing the result of a swap within a single tick price range, i.e., a single tick.
+/**
+ * @title SwapMath
+ * @notice Library for computing the result of a swap within a single tick range.
+ * @dev Performs calculations to determine the next price, input/output amounts, and fees for a swap step.
+ */
 library SwapMath {
-    /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
-    /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
-    /// @param sqrtRatioCurrentX96 The current sqrt price of the pool
-    /// @param sqrtRatioTargetX96 The price that cannot be exceeded, from which the direction of the swap is inferred
-    /// @param liquidity The usable liquidity
-    /// @param amountRemaining How much input or output amount is remaining to be swapped in/out
-    /// @param feePips The fee taken from the input amount, expressed in hundredths of a bip
-    /// @return sqrtRatioNextX96 The price after swapping the amount in/out, not to exceed the price target
-    /// @return amountIn The amount to be swapped in, of either token0 or token1, based on the direction of the swap
-    /// @return amountOut The amount to be received, of either token0 or token1, based on the direction of the swap
-    /// @return feeAmount The amount of input that will be taken as a fee
+    /**
+     * @notice Computes the result of a swap step given price limits, liquidity, and remaining input/output.
+     * @dev If `amountRemaining` is positive, this function computes how much input token is needed and how far the price moves.
+     *      If `amountRemaining` is negative, it computes how much output token can be extracted and the resulting price.
+     *      The function also handles rounding and fee computation according to the swap direction and amount type.
+     * @param sqrtRatioCurrentX96 The current sqrt price (Q64.96 format) of the pool before the swap step.
+     * @param sqrtRatioTargetX96 The target sqrt price that cannot be exceeded (used to determine direction).
+     * @param liquidity The available liquidity during this step.
+     * @param amountRemaining The amount of input or output remaining to be used (positive = exact input, negative = exact output).
+     * @param feePips The fee in hundredths of a bip (1e-6) taken from the input amount.
+     * @return sqrtRatioNextX96 The updated sqrt price after the step, bounded by the target.
+     * @return amountIn The amount of input token used during this step.
+     * @return amountOut The amount of output token returned during this step.
+     * @return feeAmount The fee amount deducted from the input.
+     */
     function computeSwapStep(
         uint160 sqrtRatioCurrentX96,
         uint160 sqrtRatioTargetX96,
@@ -38,35 +45,43 @@ library SwapMath {
         bool exactIn = amountRemaining >= 0;
 
         if (exactIn) {
+            // Reduce the input amount by the fee before computing price movement
             uint256 amountRemainingLessFee = FullMath.mulDiv(uint256(amountRemaining), 1e6 - feePips, 1e6);
             amountIn = zeroForOne
                 ? SqrtPriceMath.getAmount0Delta(sqrtRatioTargetX96, sqrtRatioCurrentX96, liquidity, true)
                 : SqrtPriceMath.getAmount1Delta(sqrtRatioCurrentX96, sqrtRatioTargetX96, liquidity, true);
-            if (amountRemainingLessFee >= amountIn) sqrtRatioNextX96 = sqrtRatioTargetX96;
-            else
+
+            if (amountRemainingLessFee >= amountIn) {
+                sqrtRatioNextX96 = sqrtRatioTargetX96;
+            } else {
                 sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(
                     sqrtRatioCurrentX96,
                     liquidity,
                     amountRemainingLessFee,
                     zeroForOne
                 );
+            }
         } else {
+            // Compute how much output is needed to reach the target price
             amountOut = zeroForOne
                 ? SqrtPriceMath.getAmount1Delta(sqrtRatioTargetX96, sqrtRatioCurrentX96, liquidity, false)
                 : SqrtPriceMath.getAmount0Delta(sqrtRatioCurrentX96, sqrtRatioTargetX96, liquidity, false);
-            if (uint256(-amountRemaining) >= amountOut) sqrtRatioNextX96 = sqrtRatioTargetX96;
-            else
+
+            if (uint256(-amountRemaining) >= amountOut) {
+                sqrtRatioNextX96 = sqrtRatioTargetX96;
+            } else {
                 sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromOutput(
                     sqrtRatioCurrentX96,
                     liquidity,
                     uint256(-amountRemaining),
                     zeroForOne
                 );
+            }
         }
 
         bool max = sqrtRatioTargetX96 == sqrtRatioNextX96;
 
-        // get the input/output amounts
+        // Recalculate actual amounts used/output based on where the price settled
         if (zeroForOne) {
             amountIn = max && exactIn
                 ? amountIn
@@ -83,13 +98,13 @@ library SwapMath {
                 : SqrtPriceMath.getAmount0Delta(sqrtRatioCurrentX96, sqrtRatioNextX96, liquidity, false);
         }
 
-        // cap the output amount to not exceed the remaining output amount
+        // Adjust output if it exceeds the amount specified
         if (!exactIn && amountOut > uint256(-amountRemaining)) {
             amountOut = uint256(-amountRemaining);
         }
 
+        // Calculate fee based on effective input
         if (exactIn && sqrtRatioNextX96 != sqrtRatioTargetX96) {
-            // we didn't reach the target, so take the remainder of the maximum input as fee
             feeAmount = uint256(amountRemaining) - amountIn;
         } else {
             feeAmount = FullMath.mulDivRoundingUp(amountIn, feePips, 1e6 - feePips);

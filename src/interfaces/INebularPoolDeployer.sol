@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title An interface for a contract that is capable of deploying Uniswap V3 Pools
-/// @notice A contract that constructs a pool must implement this to pass arguments to the pool
-/// @dev This is used to avoid having constructor arguments in the pool contract, which results in the init code hash
-/// of the pool being constant allowing the CREATE2 address of the pool to be cheaply computed on-chain
+/**
+ * @title INebularPoolDeployer
+ * @notice Interface for contracts capable of deploying NebularPool instances.
+ * @dev Enables deployment of pools without constructor arguments to ensure deterministic CREATE2 addresses.
+ */
 interface INebularPoolDeployer {
-    /// @notice Get the parameters to be used in constructing the pool, set transiently during pool creation.
-    /// @dev Called by the pool constructor to fetch the parameters of the pool
-    /// Returns factory The factory address
-    /// Returns token0 The first token of the pool by address sort order
-    /// Returns token1 The second token of the pool by address sort order
-    /// Returns fee The fee collected upon every swap in the pool, denominated in hundredths of a bip
-    /// Returns tickSpacing The minimum number of ticks between initialized ticks
+    /**
+     * @notice Returns the parameters used to construct a pool.
+     * @dev These parameters are temporarily stored and accessed by the NebularPool constructor during deployment.
+     * @return factory The address of the Nebular factory that initiated deployment.
+     * @return token0 The first token of the pool, sorted by address.
+     * @return token1 The second token of the pool, sorted by address.
+     * @return fee The fee tier for the pool, in hundredths of a bip (e.g., 3000 = 0.3%).
+     * @return tickSpacing The spacing between usable ticks in the pool.
+     */
     function parameters()
         external
         view

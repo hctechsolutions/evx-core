@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title Callback for INebularPoolActions#swap
-/// @notice Any contract that calls INebularPoolActions#swap must implement this interface
+/**
+ * @title INebularSwapCallback
+ * @notice Interface for contracts that perform token swaps via INebularPoolActions#swap.
+ * @dev Implementers must handle settlement by sending owed tokens to the pool during the callback.
+ */
 interface INebularSwapCallback {
-    /// @notice Called to `msg.sender` after executing a swap via INebularPool#swap.
-    /// @dev In the implementation you must pay the pool tokens owed for the swap.
-    /// The caller of this method must be checked to be a NebularPool deployed by the canonical NebularFactory.
-    /// amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
-    /// @param amount0Delta The amount of token0 that was sent (negative) or must be received (positive) by the pool by
-    /// the end of the swap. If positive, the callback must send that amount of token0 to the pool.
-    /// @param amount1Delta The amount of token1 that was sent (negative) or must be received (positive) by the pool by
-    /// the end of the swap. If positive, the callback must send that amount of token1 to the pool.
-    /// @param data Any data passed through by the caller via the INebularPoolActions#swap call
+    /**
+     * @notice Callback invoked by a NebularPool after executing a token swap.
+     * @dev The caller must transfer the required amounts of token0 and/or token1 to the pool, if applicable.
+     *      The caller must be verified to be a valid NebularPool deployed by the canonical NebularFactory.
+     *      If either delta is positive, that token must be sent to the pool.
+     * @param amount0Delta The net change in token0 (positive = must be paid to the pool, negative = received).
+     * @param amount1Delta The net change in token1 (positive = must be paid to the pool, negative = received).
+     * @param data Arbitrary data passed through from the original swap call.
+     */
     function nebularSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
