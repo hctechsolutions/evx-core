@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@nebular/libraries/SafeCast.sol";
+
 /// @title Oracle
 /// @notice Provides price and liquidity data useful for a wide variety of system designs
 /// @dev Instances of stored oracle data, "observations", are collected in the oracle array
@@ -34,14 +36,17 @@ library Oracle {
         uint128 liquidity
     ) private pure returns (Observation memory) {
         uint32 delta = blockTimestamp - last.blockTimestamp;
-        return
-            Observation({
-                blockTimestamp: blockTimestamp,
-                tickCumulative: last.tickCumulative + int56(tick) * delta,
-                secondsPerLiquidityCumulativeX128: last.secondsPerLiquidityCumulativeX128 +
-                    ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1)),
-                initialized: true
-            });
+        int256 cumulBefore = int256(last.tickCumulative);
+        int256 scaled = int256(tick) * int256(uint256(delta));
+        int56 newTickCumul = SafeCast.toInt56(cumulBefore + scaled);
+
+        return Observation({
+            blockTimestamp: blockTimestamp,
+            tickCumulative: newTickCumul,
+            secondsPerLiquidityCumulativeX128: last.secondsPerLiquidityCumulativeX128 +
+                ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1)),
+            initialized: true
+        });
     }
 
     /// @notice Initialize the oracle array by writing the first slot. Called once for the lifecycle of the observations array
@@ -269,19 +274,32 @@ library Oracle {
             // we're at the right boundary
             return (atOrAfter.tickCumulative, atOrAfter.secondsPerLiquidityCumulativeX128);
         } else {
-            // we're in the middle
             uint32 observationTimeDelta = atOrAfter.blockTimestamp - beforeOrAt.blockTimestamp;
-            uint32 targetDelta = target - beforeOrAt.blockTimestamp;
-            return (
-                beforeOrAt.tickCumulative +
-                    ((atOrAfter.tickCumulative - beforeOrAt.tickCumulative) / observationTimeDelta) *
-                    targetDelta,
-                beforeOrAt.secondsPerLiquidityCumulativeX128 +
-                    uint160(
-                        (uint256(
-                            atOrAfter.secondsPerLiquidityCumulativeX128 - beforeOrAt.secondsPerLiquidityCumulativeX128
-                        ) * targetDelta) / observationTimeDelta
+            uint32 targetDelta           = target - beforeOrAt.blockTimestamp;
+
+            int256 tickBefore = int256(beforeOrAt.tickCumulative);
+            int256 tickAfter  = int256(atOrAfter.tickCumulative);
+
+            int256 tickDiff   = tickAfter - tickBefore;
+            int256 scaled     = tickDiff * int256(uint256(targetDelta))
+                                / int256(uint256(observationTimeDelta));
+                                
+            int56  tickDelta  = SafeCast.toInt56(scaled);
+            int56  newTickCumulative = beforeOrAt.tickCumulative + tickDelta;
+
+            uint160 newSecondsPerLiquidity = beforeOrAt.secondsPerLiquidityCumulativeX128 +
+                uint160(
+                    uint256(
+                        atOrAfter.secondsPerLiquidityCumulativeX128
+                        - beforeOrAt.secondsPerLiquidityCumulativeX128
                     )
+                    * targetDelta
+                    / observationTimeDelta
+                );
+
+            return (
+                newTickCumulative,
+                newSecondsPerLiquidity
             );
         }
     }

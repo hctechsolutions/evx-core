@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import '@nebular/interfaces/IUniswapV3PoolDeployer.sol';
+import "@nebular/interfaces/IUniswapV3PoolDeployer.sol";
 
-import '@nebular/contracts/UniswapV3Pool.sol';
+import "@nebular/contracts/UniswapV3Pool.sol";
 
 contract UniswapV3PoolDeployer is IUniswapV3PoolDeployer {
     struct Parameters {

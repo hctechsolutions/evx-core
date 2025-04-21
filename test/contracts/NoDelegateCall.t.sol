@@ -15,7 +15,7 @@ contract Child is NoDelegateCall {
      * @dev Returns a constant value if the function is called directly.
      * @return The value 12345 if not delegatecalled.
      */
-    function protectedCall() external noDelegateCall returns (uint256) {
+    function protectedCall() external view noDelegateCall returns (uint256) {
         return 12345;
     }
 }
@@ -79,7 +79,7 @@ contract NoDelegateCallTest is Test {
      * @notice Tests that a direct call to a protected function succeeds.
      * @dev Verifies that the return value is correct when no delegatecall is used.
      */
-    function testDirectCallSuccess() public {
+    function testDirectCallSuccess() public view {
         uint256 result = child.protectedCall();
         assertEq(result, 12345);
     }

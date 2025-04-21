@@ -1,37 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import '@nebular/interfaces/IUniswapV3Pool.sol';
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import '@nebular/contracts/NoDelegateCall.sol';
+import "@nebular/interfaces/IUniswapV3Pool.sol";
 
-import '@nebular/libraries/LowGasSafeMath.sol';
-import '@nebular/libraries/SafeCast.sol';
-import '@nebular/libraries/Tick.sol';
-import '@nebular/libraries/TickBitmap.sol';
-import '@nebular/libraries/Position.sol';
-import '@nebular/libraries/Oracle.sol';
+import "@nebular/contracts/NoDelegateCall.sol";
 
-import '@nebular/libraries/FullMath.sol';
-import '@nebular/libraries/FixedPoint128.sol';
-import '@nebular/libraries/TransferHelper.sol';
-import '@nebular/libraries/TickMath.sol';
-import '@nebular/libraries/LiquidityMath.sol';
-import '@nebular/libraries/SqrtPriceMath.sol';
-import '@nebular/libraries/SwapMath.sol';
+import "@nebular/libraries/LowGasSafeMath.sol";
+import "@nebular/libraries/SafeCast.sol";
+import "@nebular/libraries/Tick.sol";
+import "@nebular/libraries/TickBitmap.sol";
+import "@nebular/libraries/Position.sol";
+import "@nebular/libraries/Oracle.sol";
 
-import '@nebular/interfaces/IUniswapV3PoolDeployer.sol';
-import '@nebular/interfaces/IUniswapV3Factory.sol';
-import '@nebular/interfaces/IERC20Minimal.sol';
-import '@nebular/interfaces/callback/IUniswapV3MintCallback.sol';
-import '@nebular/interfaces/callback/IUniswapV3SwapCallback.sol';
-import '@nebular/interfaces/callback/IUniswapV3FlashCallback.sol';
+import "@nebular/libraries/FullMath.sol";
+import "@nebular/libraries/FixedPoint128.sol";
+import "@nebular/libraries/TransferHelper.sol";
+import "@nebular/libraries/TickMath.sol";
+import "@nebular/libraries/LiquidityMath.sol";
+import "@nebular/libraries/SqrtPriceMath.sol";
+import "@nebular/libraries/SwapMath.sol";
+
+import "@nebular/interfaces/IUniswapV3PoolDeployer.sol";
+import "@nebular/interfaces/IUniswapV3Factory.sol";
+import "@nebular/interfaces/callback/IUniswapV3MintCallback.sol";
+import "@nebular/interfaces/callback/IUniswapV3SwapCallback.sol";
+import "@nebular/interfaces/callback/IUniswapV3FlashCallback.sol";
 
 contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
+
     using SafeCast for uint256;
     using SafeCast for int256;
+
+    using SafeCast for uint128;
+
     using Tick for mapping(int24 => Tick.Info);
     using TickBitmap for mapping(int16 => uint256);
     using Position for mapping(bytes32 => Position.Info);
@@ -139,7 +144,7 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     /// check
     function balance0() private view returns (uint256) {
         (bool success, bytes memory data) =
-            token0.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+            token0.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
         require(success && data.length >= 32);
         return abi.decode(data, (uint256));
     }
@@ -149,7 +154,7 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     /// check
     function balance1() private view returns (uint256) {
         (bool success, bytes memory data) =
-            token1.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+            token1.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
         require(success && data.length >= 32);
         return abi.decode(data, (uint256));
     }
@@ -462,13 +467,15 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
         bytes calldata data
     ) external override lock returns (uint256 amount0, uint256 amount1) {
         require(amount > 0);
+
+        int128 liquidityDelta = amount.toInt256().toInt128();
         (, int256 amount0Int, int256 amount1Int) =
             _modifyPosition(
                 ModifyPositionParams({
                     owner: recipient,
                     tickLower: tickLower,
                     tickUpper: tickUpper,
-                    liquidityDelta: int256(amount).toInt128()
+                    liquidityDelta: liquidityDelta
                 })
             );
 
@@ -519,13 +526,14 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
         int24 tickUpper,
         uint128 amount
     ) external override lock returns (uint256 amount0, uint256 amount1) {
+        int128 negativeLiquidityDelta = amount.toInt256().toInt128() * -1;
         (Position.Info storage position, int256 amount0Int, int256 amount1Int) =
             _modifyPosition(
                 ModifyPositionParams({
                     owner: msg.sender,
                     tickLower: tickLower,
                     tickUpper: tickUpper,
-                    liquidityDelta: -int256(amount).toInt128()
+                    liquidityDelta: negativeLiquidityDelta
                 })
             );
 

@@ -25,4 +25,14 @@ library SafeCast {
         require(y < 2**255);
         z = int256(y);
     }
+
+    /// @notice Cast an int256 to an int56, revert on overflow or underflow
+    /// @param y The int256 to be downcasted
+    /// @return z The downcasted integer, now type int56
+    function toInt56(int256 y) internal pure returns (int56 z) {
+        int256 min = type(int56).min;
+        int256 max = type(int56).max;
+        require(y >= min && y <= max, "SafeCast: int56 overflow");
+        z = int56(y);
+    }
 }
