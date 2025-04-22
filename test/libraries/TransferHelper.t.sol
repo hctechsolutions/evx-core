@@ -47,7 +47,7 @@ contract TokenReturnFalse is IERC20 {
 
 /// @notice Mock ERC20 transfer reverting
 contract TokenRevert {
-    function transfer(address, uint256) external {
+    function transfer(address, uint256) external pure {
         revert("revert");
     }
 }

@@ -37,7 +37,7 @@ contract SwapMathTest is Test {
     }
 
     /// @notice Zero amountRemaining returns same price and zero amounts/fee
-    function testComputeStepZeroAmount() public {
+    function testComputeStepZeroAmount() public view {
         (uint160 next, uint256 inAmt, uint256 outAmt, uint256 fee) =
             harness.computeStep(Q96, Q96, 1, 0, 3000);
         assertEq(next, Q96, "Price should remain");
@@ -47,7 +47,7 @@ contract SwapMathTest is Test {
     }
 
         /// @notice exactIn, zeroForOne=false (token1 swap in)
-    function testComputeStepExactInToken1() public {
+    function testComputeStepExactInToken1() public view{
         uint160 current = Q96;
         uint160 target = Q96 << 1; // 2*Q96
         int256 amountRemaining = 100;
@@ -65,7 +65,7 @@ contract SwapMathTest is Test {
     }
 
         /// @notice exactIn, zeroForOne=true (token0 swap in)
-    function testComputeStepExactInToken0() public {
+    function testComputeStepExactInToken0() public view {
         uint160 current = Q96 << 1;
         uint160 target = Q96;
         int256 amountRemaining = 100;
@@ -82,7 +82,7 @@ contract SwapMathTest is Test {
     }
 
     /// @notice exactOut, zeroForOne=true (token0 out)
-    function testComputeStepExactOutToken0() public {
+    function testComputeStepExactOutToken0() public view {
         uint160 current = Q96 << 1;
         uint160 target = Q96;
         int256 amountRemaining = -100;
@@ -99,7 +99,7 @@ contract SwapMathTest is Test {
     }
 
         /// @notice exactOut, zeroForOne=false (token1 out)
-    function testComputeStepExactOutToken1() public {
+    function testComputeStepExactOutToken1() public view {
         uint160 current = Q96;
         uint160 target = Q96 << 1;
         int256 amountRemaining = -100;

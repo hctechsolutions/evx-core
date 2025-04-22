@@ -25,13 +25,13 @@ contract TickMathTest is Test {
     }
 
     /// @notice getSqrtRatioAtTick of zero tick should equal Q96
-    function testGetSqrtRatioAtTickZero() public {
+    function testGetSqrtRatioAtTickZero() public view {
         uint160 sqrt0 = harness.getSqrtRatio(0);
         assertEq(sqrt0, uint160(1) << FixedPoint96.RESOLUTION, "sqrtPrice at tick 0 should be Q96");
     }
 
     /// @notice getSqrtRatioAtTick at MIN_TICK and MAX_TICK should return boundary ratios
-    function testGetSqrtRatioAtTickBounds() public {
+    function testGetSqrtRatioAtTickBounds() public view {
         uint160 minRatio = harness.getSqrtRatio(int24(TickMath.MIN_TICK));
         assertEq(minRatio, TickMath.MIN_SQRT_RATIO, "MIN_TICK sqrt ratio mismatch");
         uint160 maxRatio = harness.getSqrtRatio(int24(TickMath.MAX_TICK));
@@ -47,7 +47,7 @@ contract TickMathTest is Test {
     }
 
     /// @notice getTickAtSqrtRatio on MIN_SQRT_RATIO should return MIN_TICK
-    function testGetTickAtSqrtRatioAtMin() public {
+    function testGetTickAtSqrtRatioAtMin() public view {
         int24 tick = harness.getTickAtSqrt(TickMath.MIN_SQRT_RATIO);
         assertEq(tick, TickMath.MIN_TICK, "tick from MIN_SQRT_RATIO mismatch");
     }
@@ -62,7 +62,7 @@ contract TickMathTest is Test {
 
     /// @notice Round-trip: getTickAtSqrtRatio(getSqrtRatioAtTick(t)) == t for various ticks
         /// @notice Round-trip: getTickAtSqrtRatio(getSqrtRatioAtTick(t)) == t for various ticks (excluding MAX_TICK)
-    function testRoundTripTicks() public {
+    function testRoundTripTicks() public view {
         int24[] memory samples = new int24[](4);
         samples[0] = int24(TickMath.MIN_TICK);
         samples[1] = -100000;

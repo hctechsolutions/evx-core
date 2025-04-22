@@ -33,7 +33,7 @@ contract LowGasSafeMathTest is Test {
     }
 
     // ---------- Unsigned add tests ----------
-    function testAddUnsigned() public {
+    function testAddUnsigned() public view {
         assertEq(harness.add(1, 2), 3, "1 + 2 should be 3");
         assertEq(harness.add(0, 0), 0, "0 + 0 should be 0");
     }
@@ -43,7 +43,7 @@ contract LowGasSafeMathTest is Test {
     }
 
     // ---------- Unsigned sub tests ----------
-    function testSubUnsigned() public {
+    function testSubUnsigned() public view {
         assertEq(harness.sub(5, 3), 2, "5 - 3 should be 2");
         assertEq(harness.sub(0, 0), 0, "0 - 0 should be 0");
     }
@@ -53,7 +53,7 @@ contract LowGasSafeMathTest is Test {
     }
 
     // ---------- Unsigned mul tests ----------
-    function testMulUnsigned() public {
+    function testMulUnsigned() public view {
         assertEq(harness.mul(3, 4), 12, "3 * 4 should be 12");
         assertEq(harness.mul(0, type(uint256).max), 0, "0 * max should be 0");
     }
@@ -63,7 +63,7 @@ contract LowGasSafeMathTest is Test {
     }
 
     // ---------- Signed add tests ----------
-    function testAddSigned() public {
+    function testAddSigned() public view {
         assertEq(harness.addSigned(10, -3), 7, "10 + (-3) should be 7");
         assertEq(harness.addSigned(-5, 5), 0, "-5 + 5 should be 0");
     }
@@ -77,7 +77,7 @@ contract LowGasSafeMathTest is Test {
     }
 
     // ---------- Signed sub tests ----------
-    function testSubSigned() public {
+    function testSubSigned() public view {
         assertEq(harness.subSigned(5, 3), 2, "5 - 3 should be 2");
         assertEq(harness.subSigned(-2, -3), 1, "-2 - (-3) should be 1");
     }

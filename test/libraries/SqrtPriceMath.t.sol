@@ -88,7 +88,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice amount0 zero should return same price
-    function testGetNextSqrtPriceFromAmount0Zero() public {
+    function testGetNextSqrtPriceFromAmount0Zero() public view {
         assertEq(
             harness.getNextSqrtPriceFromAmount0RoundingUp(Q96, 1, 0, true),
             Q96
@@ -96,7 +96,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice amount0 addition simple case
-    function testGetNextSqrtPriceFromAmount0Add() public {
+    function testGetNextSqrtPriceFromAmount0Add() public view {
         // sqrt price = 1 => Q96, liquidity=1, amount=1
         uint160 next = harness.getNextSqrtPriceFromAmount0RoundingUp(Q96, 1, 1, true);
         // expect Q96/2
@@ -104,7 +104,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice amount0 removal simple case
-    function testGetNextSqrtPriceFromAmount0Remove() public {
+    function testGetNextSqrtPriceFromAmount0Remove() public view {
         // liquidity=2, amount=1
         uint160 next = harness.getNextSqrtPriceFromAmount0RoundingUp(Q96, 2, 1, false);
         // expect Q96*2 (2**97)
@@ -112,21 +112,21 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice amount1 addition simple case
-    function testGetNextSqrtPriceFromAmount1Add() public {
+    function testGetNextSqrtPriceFromAmount1Add() public view {
         uint160 next = harness.getNextSqrtPriceFromAmount1RoundingDown(Q96, 1, 1, true);
         // expect Q96 + Q96 = 2*Q96
         assertEq(next, Q96 << 1);
     }
 
     /// @notice amount1 removal simple case
-    function testGetNextSqrtPriceFromAmount1Remove() public {
+    function testGetNextSqrtPriceFromAmount1Remove() public view {
         uint160 next = harness.getNextSqrtPriceFromAmount1RoundingDown(Q96, 2, 1, false);
         // expect Q96 - (Q96/2)
         assertEq(next, Q96 >> 1);
     }
 
     /// @notice getNextSqrtPriceFromInput with zero amount returns same price
-    function testGetNextSqrtPriceFromInputZero() public {
+    function testGetNextSqrtPriceFromInputZero() public view {
         assertEq(
             harness.getNextSqrtPriceFromInput(Q96, 1, 0, true),
             Q96
@@ -142,19 +142,19 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice getNextSqrtPriceFromOutput removal for token0
-    function testGetNextSqrtPriceFromOutputZeroForOne() public {
+    function testGetNextSqrtPriceFromOutputZeroForOne() public view {
         uint160 next = harness.getNextSqrtPriceFromOutput(Q96, 2, 1, true);
         assertEq(next, Q96 >> 1);
     }
 
     /// @notice getNextSqrtPriceFromOutput removal for token1
-    function testGetNextSqrtPriceFromOutputOneForZero() public {
+    function testGetNextSqrtPriceFromOutputOneForZero() public view {
         uint160 next = harness.getNextSqrtPriceFromOutput(Q96, 2, 1, false);
         assertEq(next, Q96 << 1);
     }
 
     /// @notice getAmount0Delta unsigned floor and ceil
-    function testGetAmount0DeltaUnsigned() public {
+    function testGetAmount0DeltaUnsigned() public view {
         uint160 a = Q96;
         uint160 b = Q96 << 1; // 2*Q96
         uint128 liq = 1;
@@ -165,7 +165,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice getAmount1Delta unsigned floor and ceil
-    function testGetAmount1DeltaUnsigned() public {
+    function testGetAmount1DeltaUnsigned() public view {
         uint160 a = Q96;
         uint160 b = Q96 << 1;
         uint128 liq = 1;
@@ -175,7 +175,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice getAmount0Delta signed
-    function testGetAmount0DeltaSigned() public {
+    function testGetAmount0DeltaSigned() public view {
         uint160 a = Q96;
         uint160 b = Q96 << 1;
         // positive liquidity
@@ -185,7 +185,7 @@ contract SqrtPriceMathTest is Test {
     }
 
     /// @notice getAmount1Delta signed
-    function testGetAmount1DeltaSigned() public {
+    function testGetAmount1DeltaSigned() public view {
         uint160 a = Q96;
         uint160 b = Q96 << 1;
         assertEq(harness.getAmount1DeltaSigned(a, b, int128(1)), 1);

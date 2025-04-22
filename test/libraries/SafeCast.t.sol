@@ -33,7 +33,7 @@ contract SafeCastTest is Test {
     }
 
     /// @notice toUint160 should cast values <= max uint160
-    function testToUint160() public {
+    function testToUint160() public view {
         uint256 max160 = type(uint160).max;
         assertEq(harness.toUint160(max160), uint160(max160));
         // zero
@@ -48,7 +48,7 @@ contract SafeCastTest is Test {
     }
 
     /// @notice toInt128 should cast values within int128 range
-    function testToInt128() public {
+    function testToInt128() public view {
         int256 max128 = int256(type(int128).max);
         int256 min128 = int256(type(int128).min);
         assertEq(harness.toInt128(max128), int128(max128));
@@ -67,7 +67,7 @@ contract SafeCastTest is Test {
     }
 
     /// @notice toInt256 should cast values < 2^255
-    function testToInt256() public {
+    function testToInt256() public view {
         uint256 maxSigned = uint256(type(int256).max);
         assertEq(harness.toInt256(maxSigned), int256(maxSigned));
         assertEq(harness.toInt256(0), int256(0));
@@ -81,7 +81,7 @@ contract SafeCastTest is Test {
     }
 
     /// @notice toInt56 should cast values within int56 range
-    function testToInt56() public {
+    function testToInt56() public view {
         int256 max56 = int256(type(int56).max);
         int256 min56 = int256(type(int56).min);
         assertEq(harness.toInt56(max56), int56(max56));

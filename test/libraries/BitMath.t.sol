@@ -40,7 +40,7 @@ contract BitMathTest is Test {
     }
 
     /// @notice Returns correct index for exact powers of two
-    function testMostSignificantBitPowersOfTwo() public {
+    function testMostSignificantBitPowersOfTwo() public pure {
         for (uint8 i = 0; i < 8; i++) {
             uint256 x = uint256(1) << i;
             assertEq(BitMath.mostSignificantBit(x), i, "MSB of power-of-two mismatch");
@@ -52,14 +52,14 @@ contract BitMathTest is Test {
     }
 
     /// @notice Returns correct index for non-power-of-two inputs
-    function testMostSignificantBitNonPowersOfTwo() public {
+    function testMostSignificantBitNonPowersOfTwo() public pure {
         assertEq(BitMath.mostSignificantBit(3), 1, "MSB of 3 should be 1");
         assertEq(BitMath.mostSignificantBit(5), 2, "MSB of 5 should be 2");
         assertEq(BitMath.mostSignificantBit(0x123456), 20, "MSB of 0x123456 should be 20");
     }
 
     /// @notice Returns correct index for least significant bit on basic inputs
-    function testLeastSignificantBitBasics() public {
+    function testLeastSignificantBitBasics() public pure {
         assertEq(BitMath.leastSignificantBit(1), 0, "LSB of 1 should be 0");
         assertEq(BitMath.leastSignificantBit(2), 1, "LSB of 2 should be 1");
         assertEq(BitMath.leastSignificantBit(3), 0, "LSB of 3 should be 0");
@@ -67,7 +67,7 @@ contract BitMathTest is Test {
     }
 
     /// @notice Handles mixed and large values for leastSignificantBit
-    function testLeastSignificantBitMixedAndLarge() public {
+    function testLeastSignificantBitMixedAndLarge() public pure {
         uint256 mixed = (uint256(1) << 100) + (uint256(1) << 50);
         assertEq(BitMath.leastSignificantBit(mixed), 50, "LSB of mixed bits mismatch");
         assertEq(BitMath.leastSignificantBit(1 << 200), 200, "LSB of 2^200 mismatch");

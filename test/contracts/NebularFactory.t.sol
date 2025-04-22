@@ -63,7 +63,7 @@ contract NebularFactoryTest is Test {
         tokenB = new MockERC20("TokenB", "TKB");
     }
 
-    function testConstructorSetsOwnerAndFees() public {
+    function testConstructorSetsOwnerAndFees() public view {
         assertEq(factory.owner(), owner);
         assertEq(factory.feeAmountTickSpacing(500), 10);
         assertEq(factory.feeAmountTickSpacing(3000), 60);

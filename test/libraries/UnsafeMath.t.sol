@@ -21,26 +21,26 @@ contract UnsafeMathTest is Test {
     }
 
     /// @notice Exact division yields exact result
-    function testDivExact() public {
+    function testDivExact() public view {
         assertEq(harness.divUp(10, 2), 5, "10/2 should be 5");
         assertEq(harness.divUp(0, 5), 0, "0/5 should be 0");
     }
 
     /// @notice Division with remainder rounds up
-    function testDivRoundingUp() public {
+    function testDivRoundingUp() public view {
         assertEq(harness.divUp(11, 2), 6, "11/2 should round up to 6");
         assertEq(harness.divUp(1, 1), 1, "1/1 should be 1");
     }
 
     /// @notice Large numbers
-    function testDivLargeNumbers() public {
+    function testDivLargeNumbers() public view {
         uint256 max = type(uint256).max;
         assertEq(harness.divUp(max, 1), max, "max/1 should be max");
         assertEq(harness.divUp(max, max), 1, "max/max should be 1");
     }
 
         /// @notice Division by zero yields zero (unchecked behavior)
-    function testDivByZeroReturnsZero() public {
+    function testDivByZeroReturnsZero() public view {
         assertEq(harness.divUp(1, 0), 0, "1/0 should return 0");
     }
 }

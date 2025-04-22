@@ -22,34 +22,34 @@ contract LiquidityMathTest is Test {
     }
 
     /// @notice Adding zero delta should return the same liquidity
-    function testAddDeltaZero() public {
+    function testAddDeltaZero() public view {
         uint128 x = 12345;
         assertEq(harness.addDelta(x, 0), x, "addDelta(x,0) should equal x");
     }
 
     /// @notice Increasing liquidity by a positive delta
-    function testAddDeltaIncrease() public {
+    function testAddDeltaIncrease() public view {
         uint128 x = 100;
         int128 y = 50;
         assertEq(harness.addDelta(x, y), 150, "addDelta(100,+50) should be 150");
     }
 
     /// @notice Decreasing liquidity by a negative delta
-    function testAddDeltaDecrease() public {
+    function testAddDeltaDecrease() public view {
         uint128 x = 200;
         int128 y = -75;
         assertEq(harness.addDelta(x, y), 125, "addDelta(200,-75) should be 125");
     }
 
     /// @notice Decrease by full amount should yield zero
-    function testAddDeltaDecreaseToZero() public {
+    function testAddDeltaDecreaseToZero() public view {
         uint128 x = 500;
         int128 y = -int128(uint128(x));
         assertEq(harness.addDelta(x, y), 0, "addDelta(x, -x) should be 0");
     }
 
     /// @notice Increasing liquidity within uint128 max should succeed
-    function testAddDeltaMaxIncrease() public {
+    function testAddDeltaMaxIncrease() public view {
         uint128 x = type(uint128).max - 1;
         int128 y = 1;
         assertEq(harness.addDelta(x, y), type(uint128).max, "addDelta(max-1,+1) should be max");

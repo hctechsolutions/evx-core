@@ -94,7 +94,7 @@ contract TickTest is Test {
 
     /// @notice tickSpacingToMaxLiquidityPerTick should divide max uint128 by correct number of ticks
         /// @notice tickSpacingToMaxLiquidityPerTick should return max when spacing covers entire range
-    function testTickSpacingToMaxLiquidity() public {
+    function testTickSpacingToMaxLiquidity() public view {
         int24 spacing = TickMath.MAX_TICK - TickMath.MIN_TICK; // full range
         uint128 maxLiq = harness.callTickSpacingToMaxLiquidity(spacing);
         // Only one usable tick, so max liquidity per tick is full uint128
