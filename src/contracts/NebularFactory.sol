@@ -7,8 +7,8 @@ import "@nebular/contracts/NoDelegateCall.sol";
 import "@nebular/contracts/NebularPool.sol";
 
 /**
- * @title Canonical Uniswap V3 factory
- * @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
+ * @title Canonical Nebular factory
+ * @notice Deploys Nebular pools and manages ownership and control over pool protocol fees
  * @dev Implements INebularFactory, extends NebularPoolDeployer for CREATE2 deployment, and adds NoDelegateCall guard
  */
 contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall {

@@ -30,7 +30,7 @@ import "@nebular/interfaces/callback/INebularFlashCallback.sol";
 
 /**
  * @title NebularPool
- * @notice Uniswap V3-style pool implementation handling liquidity, swaps, and fees for a token pair
+ * @notice Nebular-style pool implementation handling liquidity, swaps, and fees for a token pair
  * @dev Initializes parameters via INebularPoolDeployer; protected against delegate calls and reentrancy
  */
 contract NebularPool is INebularPool, NoDelegateCall {

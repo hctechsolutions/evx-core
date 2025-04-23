@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title The interface for the Uniswap V3 Factory
- * @notice The Uniswap V3 Factory facilitates creation of Uniswap V3 pools and control over the protocol fees
+ * @title The interface for the Nebular Factory
+ * @notice The Nebular Factory facilitates creation of Nebular pools and control over the protocol fees
  * @dev Provides functions to create pools, query pools, and manage fee configurations
  */
 interface INebularFactory {
