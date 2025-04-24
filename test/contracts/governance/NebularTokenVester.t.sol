@@ -19,7 +19,7 @@ contract MockERC20 is ERC20 {
 
 contract NebularTokenVesterTest is Test {
     MockERC20 public token;
-    TokenVester public vesting;
+    NebularTokenVester public vesting;
 
     uint256 public constant CLIFF_DURATION = 365 days;
     uint256 public constant INITIAL_RELEASE = 1e18; // 1 token
@@ -36,7 +36,7 @@ contract NebularTokenVesterTest is Test {
         vm.startPrank(owner);
 
         token = new MockERC20();
-        vesting = new TokenVester(
+        vesting = new NebularTokenVester(
             token, 
             CLIFF_DURATION, 
             INITIAL_RELEASE, 

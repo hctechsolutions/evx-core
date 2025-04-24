@@ -7,14 +7,14 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title TokenVester
+ * @title NebularTokenVester
  * @notice Implements a linear token vesting mechanism with an initial cliff and optional immediate release.
  * @dev This contract holds tokens and gradually releases them to a beneficiary address according to a vesting schedule.
  *      It supports an initial cliff duration, an optional initial release of tokens after the cliff, and linear release
  *      of the remaining tokens over a fixed vesting duration. The contract is Ownable and only the owner can trigger
  *      token releases.
  */
-contract TokenVester is INebularTokenVester, Ownable {
+contract NebularTokenVester is INebularTokenVester, Ownable {
     using SafeERC20 for IERC20;
 
     /// @inheritdoc INebularTokenVester

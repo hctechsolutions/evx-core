@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@nebular/interfaces/INebularFactory.sol";
 import "@nebular/contracts/NebularPoolDeployer.sol";
+import "@nebular/interfaces/INebularFactory.sol";
 import "@nebular/contracts/NoDelegateCall.sol";
-import "@nebular/contracts/NebularPool.sol";
 
 /**
  * @title Canonical Nebular factory
@@ -17,6 +16,7 @@ contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall 
 
     /// @inheritdoc INebularFactory
     mapping(uint24 => int24) public override feeAmountTickSpacing;
+
     /// @inheritdoc INebularFactory
     mapping(address => mapping(address => mapping(uint24 => address))) public override getPool;
 
@@ -29,10 +29,11 @@ contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall 
         emit OwnerChanged(address(0), msg.sender);
 
         feeAmountTickSpacing[500] = 10;
-        emit FeeAmountEnabled(500, 10);
         feeAmountTickSpacing[3000] = 60;
-        emit FeeAmountEnabled(3000, 60);
         feeAmountTickSpacing[10000] = 200;
+        
+        emit FeeAmountEnabled(500, 10);
+        emit FeeAmountEnabled(3000, 60);
         emit FeeAmountEnabled(10000, 200);
     }
 
@@ -42,16 +43,26 @@ contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall 
         address tokenB,
         uint24 fee
     ) external override noDelegateCall returns (address pool) {
-        require(tokenA != tokenB);
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0));
+        require(tokenA != tokenB, "CreatePool: IDENTICAL_ADDRESSES");
+
+        (address token0, address token1) = tokenA < tokenB 
+            ? (tokenA, tokenB) 
+            : (tokenB, tokenA);
+
+        require(token0 != address(0), "CreatePool: ZERO_ADDRESS");
+
         int24 tickSpacing = feeAmountTickSpacing[fee];
-        require(tickSpacing != 0);
-        require(getPool[token0][token1][fee] == address(0));
+        require(tickSpacing != 0, "CreatePool: INVALID_FEE");
+
+        require(getPool[token0][token1][fee] == address(0), "CreatePool: POOL_EXISTS");
+
+        // Deploy the pool deterministically with the provided parameters
         pool = deploy(address(this), token0, token1, fee, tickSpacing);
+
+        // Store pool address for both token pair orderings
         getPool[token0][token1][fee] = pool;
-        // populate mapping in the reverse direction, deliberate choice to avoid the cost of comparing addresses
         getPool[token1][token0][fee] = pool;
+
         emit PoolCreated(token0, token1, fee, tickSpacing, pool);
     }
 
