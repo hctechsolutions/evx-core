@@ -12,7 +12,7 @@ interface INebularPoolEvents {
      * @param sqrtPriceX96 The initial sqrt price of the pool as a Q64.96 value
      * @param tick The initial tick of the pool (log base 1.0001 of the starting price)
      */
-    event Initialize(uint160 sqrtPriceX96, int24 tick);
+    event InitializeObservation(uint160 sqrtPriceX96, int24 tick);
 
     /**
      * @notice Emitted when liquidity is minted for a given position
