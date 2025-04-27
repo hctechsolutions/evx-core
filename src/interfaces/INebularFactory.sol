@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title The interface for the Uniswap V3 Factory
- * @notice The Uniswap V3 Factory facilitates creation of Uniswap V3 pools and control over the protocol fees
+ * @title The interface for the Nebular Factory
+ * @notice The Nebular Factory facilitates creation of Nebular pools and control over the protocol fees
  * @dev Provides functions to create pools, query pools, and manage fee configurations
  */
 interface INebularFactory {
@@ -40,25 +40,25 @@ interface INebularFactory {
     /**
      * @notice Returns the current owner of the factory
      * @dev Can be changed by the current owner via setOwner
-     * @return The address of the factory owner
+     * @return ownerAddress The address of the factory owner
      */
-    function owner() external view returns (address);
+    function owner() external view returns (address ownerAddress);
 
     /**
      * @notice Returns the tick spacing for a given fee amount, if enabled, or 0 if not enabled
-     * @dev A fee amount can never be removed, so this value should be hard coded or cached in the calling context
-     * @param fee The enabled fee, denominated in hundredths of a bip. Returns 0 in case of unenabled fee
-     * @return The tick spacing
+     * @dev A fee amount can never be removed once enabled
+     * @param fee The fee tier denominated in hundredths of a bip
+     * @return tickSpacing The tick spacing associated with the fee
      */
-    function feeAmountTickSpacing(uint24 fee) external view returns (int24);
+    function feeAmountTickSpacing(uint24 fee) external view returns (int24 tickSpacing);
 
     /**
-     * @notice Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
-     * @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
-     * @param tokenA The contract address of either token0 or token1
+     * @notice Returns the pool address for a given token pair and fee, or address(0) if it does not exist
+     * @dev tokenA and tokenB may be passed in either order
+     * @param tokenA The contract address of one token
      * @param tokenB The contract address of the other token
-     * @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip
-     * @return pool The pool address
+     * @param fee The fee tier denominated in hundredths of a bip
+     * @return pool The address of the pool or zero address if not found
      */
     function getPool(
         address tokenA,
@@ -67,11 +67,12 @@ interface INebularFactory {
     ) external view returns (address pool);
 
     /**
-     * @notice Creates a pool for the given two tokens and fee
-     * @param tokenA One of the two tokens in the desired pool
-     * @param tokenB The other of the two tokens in the desired pool
-     * @param fee The desired fee for the pool
-     * @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments are invalid.
+     * @notice Creates a new Nebular pool for the given tokens and fee
+     * @dev Uses deterministic CREATE2 address via token ordering and fee salt
+     *      Reverts if pool exists, fee invalid, or token inputs invalid
+     * @param tokenA One of the two tokens
+     * @param tokenB The other token
+     * @param fee The fee tier for the pool
      * @return pool The address of the newly created pool
      */
     function createPool(
@@ -81,17 +82,17 @@ interface INebularFactory {
     ) external returns (address pool);
 
     /**
-     * @notice Updates the owner of the factory
+     * @notice Transfers factory ownership to a new owner
      * @dev Must be called by the current owner
-     * @param _owner The new owner of the factory
+     * @param _owner The new owner address to set
      */
     function setOwner(address _owner) external;
 
     /**
-     * @notice Enables a fee amount with the given tickSpacing
-     * @dev Fee amounts may never be removed once enabled
-     * @param fee The fee amount to enable, denominated in hundredths of a bip (i.e. 1e-6)
-     * @param tickSpacing The spacing between ticks to be enforced for all pools created with the given fee amount
+     * @notice Enables a new fee tier with given tick spacing
+     * @dev Fee tiers cannot be removed once enabled
+     * @param fee The fee tier denominated in hundredths of a bip
+     * @param tickSpacing The tick spacing to enforce for this fee tier
      */
     function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
 }

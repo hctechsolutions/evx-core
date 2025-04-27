@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+
+import "@nebular/interfaces/IERC20Minimal.sol";
 
 import "@nebular/interfaces/INebularPool.sol";
 
-import "@nebular/contracts/NoDelegateCall.sol";
+import "@nebular/contracts/NoDelegateCallUpgradeable.sol";
 
-import "@nebular/libraries/LowGasSafeMath.sol";
-import "@nebular/libraries/SafeCast.sol";
-import "@nebular/libraries/Tick.sol";
-import "@nebular/libraries/TickBitmap.sol";
-import "@nebular/libraries/Position.sol";
-import "@nebular/libraries/Oracle.sol";
+import { LowGasSafeMath } from "@nebular/libraries/LowGasSafeMath.sol";
+import { TransferHelper } from "@nebular/libraries/TransferHelper.sol";
+import { FixedPoint128 } from "@nebular/libraries/FixedPoint128.sol";
+import { LiquidityMath } from "@nebular/libraries/LiquidityMath.sol";
+import { SqrtPriceMath } from "@nebular/libraries/SqrtPriceMath.sol";
+import { TickBitmap } from "@nebular/libraries/TickBitmap.sol";
+import { SafeCast } from "@nebular/libraries/SafeCast.sol";
+import { Position } from "@nebular/libraries/Position.sol";
+import { FullMath } from "@nebular/libraries/FullMath.sol";
+import { TickMath } from "@nebular/libraries/TickMath.sol";
+import { SwapMath } from "@nebular/libraries/SwapMath.sol";
+import { Oracle } from "@nebular/libraries/Oracle.sol";
+import { Tick } from "@nebular/libraries/Tick.sol";
 
-import "@nebular/libraries/FullMath.sol";
-import "@nebular/libraries/FixedPoint128.sol";
-import "@nebular/libraries/TransferHelper.sol";
-import "@nebular/libraries/TickMath.sol";
-import "@nebular/libraries/LiquidityMath.sol";
-import "@nebular/libraries/SqrtPriceMath.sol";
-import "@nebular/libraries/SwapMath.sol";
+import "@nebular/libraries/Errors.sol";
 
-import "@nebular/interfaces/INebularPoolDeployer.sol";
 import "@nebular/interfaces/INebularFactory.sol";
 import "@nebular/interfaces/callback/INebularMintCallback.sol";
 import "@nebular/interfaces/callback/INebularSwapCallback.sol";
@@ -30,10 +32,10 @@ import "@nebular/interfaces/callback/INebularFlashCallback.sol";
 
 /**
  * @title NebularPool
- * @notice Uniswap V3-style pool implementation handling liquidity, swaps, and fees for a token pair
+ * @notice Nebular-style pool implementation handling liquidity, swaps, and fees for a token pair
  * @dev Initializes parameters via INebularPoolDeployer; protected against delegate calls and reentrancy
  */
-contract NebularPool is INebularPool, NoDelegateCall {
+contract NebularPool is INebularPool, NoDelegateCallUpgradeable {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
 
@@ -49,19 +51,22 @@ contract NebularPool is INebularPool, NoDelegateCall {
     using Oracle for Oracle.Observation[65535];
 
     /// @inheritdoc INebularPoolImmutables
-    address public immutable override factory;
-    /// @inheritdoc INebularPoolImmutables
-    address public immutable override token0;
-    /// @inheritdoc INebularPoolImmutables
-    address public immutable override token1;
-    /// @inheritdoc INebularPoolImmutables
-    uint24 public immutable override fee;
+    address public factory;
 
     /// @inheritdoc INebularPoolImmutables
-    int24 public immutable override tickSpacing;
+    address public token0;
 
     /// @inheritdoc INebularPoolImmutables
-    uint128 public immutable override maxLiquidityPerTick;
+    address public token1;
+
+    /// @inheritdoc INebularPoolImmutables
+    uint24 public fee;
+
+    /// @inheritdoc INebularPoolImmutables
+    int24 public tickSpacing;
+
+    /// @inheritdoc INebularPoolImmutables
+    uint128 public maxLiquidityPerTick;
 
     /**
     * @notice Parameters for modifying a liquidity position.
@@ -191,6 +196,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
 
     /// @inheritdoc INebularPoolState
     uint256 public override feeGrowthGlobal0X128;
+
     /// @inheritdoc INebularPoolState
     uint256 public override feeGrowthGlobal1X128;
 
@@ -199,6 +205,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
         uint128 token0;
         uint128 token1;
     }
+
     /// @inheritdoc INebularPoolState
     ProtocolFees public override protocolFees;
 
@@ -219,7 +226,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
      * @dev Ensures mutual exclusion and verifies that the pool is initialized
      */    
     modifier lock() {
-        require(slot0.unlocked, 'LOK');
+        if (!slot0.unlocked) revert Locked();
         slot0.unlocked = false;
         _;
         slot0.unlocked = true;
@@ -230,16 +237,8 @@ contract NebularPool is INebularPool, NoDelegateCall {
      * @dev Validates the caller against the factory's owner address
      */    
     modifier onlyFactoryOwner() {
-        require(msg.sender == INebularFactory(factory).owner());
+        if (msg.sender != INebularFactory(factory).owner()) revert OnlyFactoryOwner();
         _;
-    }
-
-    constructor() {
-        int24 _tickSpacing;
-        (factory, token0, token1, fee, _tickSpacing) = INebularPoolDeployer(msg.sender).parameters();
-        tickSpacing = _tickSpacing;
-
-        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(_tickSpacing);
     }
 
     /**
@@ -249,9 +248,9 @@ contract NebularPool is INebularPool, NoDelegateCall {
      * @param tickUpper The upper tick
      */
     function checkTicks(int24 tickLower, int24 tickUpper) private pure {
-        require(tickLower < tickUpper, 'TLU');
-        require(tickLower >= TickMath.MIN_TICK, 'TLM');
-        require(tickUpper <= TickMath.MAX_TICK, 'TUM');
+        if (tickLower > tickUpper) revert InvalidTickOrder();
+        if (tickLower <= TickMath.MIN_TICK) revert TickLowerBelowMinimum();
+        if (tickUpper >= TickMath.MAX_TICK) revert TickUpperAboveMaximum();
     }
 
     /**
@@ -270,8 +269,8 @@ contract NebularPool is INebularPool, NoDelegateCall {
      */
     function balance0() private view returns (uint256) {
         (bool success, bytes memory data) =
-            token0.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
-        require(success && data.length >= 32);
+            token0.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+        if (!(success && data.length >= 32)) revert BalanceQueryFailed();
         return abi.decode(data, (uint256));
     }
 
@@ -282,8 +281,8 @@ contract NebularPool is INebularPool, NoDelegateCall {
      */
     function balance1() private view returns (uint256) {
         (bool success, bytes memory data) =
-            token1.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, address(this)));
-        require(success && data.length >= 32);
+            token1.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+        if (!(success && data.length >= 32)) revert BalanceQueryFailed();
         return abi.decode(data, (uint256));
     }
 
@@ -318,7 +317,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
                 lower.secondsOutside,
                 lower.initialized
             );
-            require(initializedLower);
+            if (!initializedLower) revert LowerTickNotInitialized();
 
             bool initializedUpper;
             (tickCumulativeUpper, secondsPerLiquidityOutsideUpperX128, secondsOutsideUpper, initializedUpper) = (
@@ -327,7 +326,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
                 upper.secondsOutside,
                 upper.initialized
             );
-            require(initializedUpper);
+            if (!initializedUpper) revert UpperTickNotInitialized();
         }
 
         Slot0 memory _slot0 = slot0;
@@ -399,10 +398,28 @@ contract NebularPool is INebularPool, NoDelegateCall {
             emit IncreaseObservationCardinalityNext(observationCardinalityNextOld, observationCardinalityNextNew);
     }
 
+    function initialize(
+        address _factory,
+        address _token0,
+        address _token1,
+        uint24  _fee,
+        int24 _tickSpacing
+    ) external {
+        __NoDelegateCall_init();
+
+        factory = _factory;
+        token0 = _token0;
+        token1 = _token1;
+        fee = _fee;
+        tickSpacing = _tickSpacing;
+
+        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(_tickSpacing);
+    }
+
     /// @inheritdoc INebularPoolActions
     /// @dev not locked because it initializes unlocked
-    function initialize(uint160 sqrtPriceX96) external override {
-        require(slot0.sqrtPriceX96 == 0, 'AI');
+    function initializeObservation(uint160 sqrtPriceX96) external override {
+        if (slot0.sqrtPriceX96 != 0) revert AlreadyInitialized();
 
         int24 tick = TickMath.getTickAtSqrtRatio(sqrtPriceX96);
 
@@ -418,7 +435,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
             unlocked: true
         });
 
-        emit Initialize(sqrtPriceX96, tick);
+        emit InitializeObservation(sqrtPriceX96, tick);
     }
 
     /**
@@ -592,7 +609,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
         uint128 amount,
         bytes calldata data
     ) external override lock returns (uint256 amount0, uint256 amount1) {
-        require(amount > 0);
+        if (amount <= 0) revert MintZeroAmount();
 
         int128 liquidityDelta = amount.toInt256().toInt128();
         (, int256 amount0Int, int256 amount1Int) =
@@ -610,12 +627,13 @@ contract NebularPool is INebularPool, NoDelegateCall {
 
         uint256 balance0Before;
         uint256 balance1Before;
+        
         if (amount0 > 0) balance0Before = balance0();
         if (amount1 > 0) balance1Before = balance1();
         INebularMintCallback(msg.sender).nebularMintCallback(amount0, amount1, data);
-        if (amount0 > 0) require(balance0Before.add(amount0) <= balance0(), 'M0');
-        if (amount1 > 0) require(balance1Before.add(amount1) <= balance1(), 'M1');
-
+        if (amount0 > 0 && balance0Before.add(amount0) > balance0()) revert InsufficientBalance0();
+        if (amount1 > 0 && balance1Before.add(amount1) > balance1()) revert InsufficientBalance1();
+        
         emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
     }
 
@@ -684,17 +702,13 @@ contract NebularPool is INebularPool, NoDelegateCall {
         uint160 sqrtPriceLimitX96,
         bytes calldata data
     ) external override noDelegateCall returns (int256 amount0, int256 amount1) {
-        require(amountSpecified != 0, 'AS');
+        if (amountSpecified == 0) revert ZeroSwapAmount();
 
         Slot0 memory slot0Start = slot0;
 
-        require(slot0Start.unlocked, 'LOK');
-        require(
-            zeroForOne
-                ? sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
-                : sqrtPriceLimitX96 > slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 < TickMath.MAX_SQRT_RATIO,
-            'SPL'
-        );
+        if (!slot0Start.unlocked) revert Locked();
+
+        if (zeroForOne ? !(sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO) : !(sqrtPriceLimitX96 > slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 < TickMath.MAX_SQRT_RATIO)) revert SqrtPriceLimit();
 
         slot0.unlocked = false;
 
@@ -857,14 +871,14 @@ contract NebularPool is INebularPool, NoDelegateCall {
             if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
 
             uint256 balance0Before = balance0();
-            INebularSwapCallback(msg.sender).nebularSwapCallback(amount0, amount1, data);
-            require(balance0Before.add(uint256(amount0)) <= balance0(), 'IIA');
+            INebularSwapCallback(msg.sender).nebularSwapCallback(amount0, amount1, data);           
+            if (balance0Before.add(uint256(amount0)) > balance0()) revert InsufficientInputAmount();
         } else {
             if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
 
             uint256 balance1Before = balance1();
             INebularSwapCallback(msg.sender).nebularSwapCallback(amount0, amount1, data);
-            require(balance1Before.add(uint256(amount1)) <= balance1(), 'IIA');
+            if (balance1Before.add(uint256(amount1)) > balance1()) revert InsufficientInputAmount();
         }
 
         emit Swap(msg.sender, recipient, amount0, amount1, state.sqrtPriceX96, state.liquidity, state.tick);
@@ -879,7 +893,7 @@ contract NebularPool is INebularPool, NoDelegateCall {
         bytes calldata data
     ) external override lock noDelegateCall {
         uint128 _liquidity = liquidity;
-        require(_liquidity > 0, 'L');
+        if (_liquidity <= 0) revert NoLiquidity();
 
         uint256 fee0 = FullMath.mulDivRoundingUp(amount0, fee, 1e6);
         uint256 fee1 = FullMath.mulDivRoundingUp(amount1, fee, 1e6);
@@ -894,8 +908,8 @@ contract NebularPool is INebularPool, NoDelegateCall {
         uint256 balance0After = balance0();
         uint256 balance1After = balance1();
 
-        require(balance0Before.add(fee0) <= balance0After, 'F0');
-        require(balance1Before.add(fee1) <= balance1After, 'F1');
+        if (balance0Before.add(fee0) > balance0After) revert FlashFee0NotReceived();
+        if (balance1Before.add(fee1) > balance1After) revert FlashFee1NotReceived();
 
         // sub is safe because we know balanceAfter is gt balanceBefore by at least fee
         uint256 paid0 = balance0After - balance0Before;
@@ -919,10 +933,11 @@ contract NebularPool is INebularPool, NoDelegateCall {
 
     /// @inheritdoc INebularPoolOwnerActions
     function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external override lock onlyFactoryOwner {
-        require(
-            (feeProtocol0 == 0 || (feeProtocol0 >= 4 && feeProtocol0 <= 10)) &&
-                (feeProtocol1 == 0 || (feeProtocol1 >= 4 && feeProtocol1 <= 10))
-        );
+        if (!(
+        (feeProtocol0 == 0 || (feeProtocol0 >= 4 && feeProtocol0 <= 10)) &&
+        (feeProtocol1 == 0 || (feeProtocol1 >= 4 && feeProtocol1 <= 10))
+        )) revert InvalidFeeProtocol();
+
         uint8 feeProtocolOld = slot0.feeProtocol;
         slot0.feeProtocol = feeProtocol0 + (feeProtocol1 << 4);
         emit SetFeeProtocol(feeProtocolOld % 16, feeProtocolOld >> 4, feeProtocol0, feeProtocol1);

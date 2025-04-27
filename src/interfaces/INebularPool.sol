@@ -9,7 +9,7 @@ import "./pool/INebularPoolOwnerActions.sol";
 import "./pool/INebularPoolEvents.sol";
 
 /**
- * @title The interface for a Uniswap V3 Pool
+ * @title The interface for a Nebular Pool
  * @notice A Uniswap pool facilitates swapping and automated market making between any two assets that strictly conform to the ERC20 specification
  * @dev The pool interface is composed of multiple smaller interfaces for modularity: Immutables, State, DerivedState, Actions, OwnerActions, and Events
  */

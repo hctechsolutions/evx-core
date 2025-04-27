@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@nebular/contracts/NebularFactory.sol";
 import "@nebular/contracts/NebularPool.sol";
@@ -29,7 +30,9 @@ contract NebularPoolTest is Test {
      * @dev Called before each test. Deploys factory, tokens, creates pool with fee 5 bps, initializes price to 1.0, and deploys callback mocks.
      */
     function setUp() public {
-        factory = new NebularFactory();
+        NebularPool poolImplementation = new NebularPool();
+        factory = new NebularFactory(address(poolImplementation));
+
         owner = address(this);
         tokenA = new MockERC20("TokenA", "TKA");
         tokenB = new MockERC20("TokenB", "TKB");
@@ -37,13 +40,16 @@ contract NebularPoolTest is Test {
         // create and initialize pool
         address poolAddr = factory.createPool(address(tokenA), address(tokenB), 500);
         pool = NebularPool(payable(poolAddr));
-        uint160 price = TickMath.getSqrtRatioAtTick(0);
-        pool.initialize(price);
 
-        // deploy callbacks
-        mintCb = new MintCallbackMock(ERC20(tokenA), ERC20(tokenB));
-        swapCb = new SwapCallbackMock(ERC20(tokenA), ERC20(tokenB));
-        flashCb = new FlashCallbackMock(ERC20(tokenA), ERC20(tokenB));
+        uint160 price = TickMath.getSqrtRatioAtTick(0);
+        pool.initializeObservation(price);
+
+        ERC20 t0 = ERC20(pool.token0());
+        ERC20 t1 = ERC20(pool.token1());
+
+        mintCb  = new MintCallbackMock(t0, t1);
+        swapCb  = new SwapCallbackMock(t0, t1);
+        flashCb = new FlashCallbackMock(t0, t1);
     }
 
     /**
@@ -53,7 +59,7 @@ contract NebularPoolTest is Test {
     function testInitializeRevertsIfCalledTwice() public {
         uint160 price = TickMath.getSqrtRatioAtTick(0);
         vm.expectRevert();
-        pool.initialize(price);
+        pool.initializeObservation(price);
     }
 
     /**
@@ -117,6 +123,8 @@ contract NebularPoolTest is Test {
 
         // fund swap callback and execute swap as swapCb
         tokenA.mint(address(swapCb), 1e24);
+        tokenB.mint(address(swapCb), 1e24);
+        
         vm.prank(address(swapCb));
         pool.swap(address(this), true, int256(500 * 1e18), TickMath.getSqrtRatioAtTick(-1), "");
     }

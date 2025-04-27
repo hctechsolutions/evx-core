@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@nebular/libraries/Errors.sol";
+
 /**
  * @title NoDelegateCall
  * @notice Base contract that prevents functions from being called through delegatecall.
@@ -26,7 +28,7 @@ abstract contract NoDelegateCall {
      *      Reverts if the contract is being delegatecalled.
      */
     function checkNotDelegateCall() private view {
-        require(address(this) == original, "NoDelegateCall: delegatecall not allowed");
+        if (address(this) != original) revert NoDelegateCallError();
     }
 
     /**

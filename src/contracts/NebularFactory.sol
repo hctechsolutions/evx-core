@@ -1,39 +1,60 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@nebular/interfaces/INebularFactory.sol";
-import "@nebular/contracts/NebularPoolDeployer.sol";
 import "@nebular/contracts/NoDelegateCall.sol";
 import "@nebular/contracts/NebularPool.sol";
+import "@nebular/libraries/Errors.sol";
 
-/**
- * @title Canonical Uniswap V3 factory
- * @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
- * @dev Implements INebularFactory, extends NebularPoolDeployer for CREATE2 deployment, and adds NoDelegateCall guard
- */
-contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall {
+contract NebularFactory is INebularFactory, NoDelegateCall {
     /// @inheritdoc INebularFactory
     address public override owner;
 
     /// @inheritdoc INebularFactory
     mapping(uint24 => int24) public override feeAmountTickSpacing;
+
     /// @inheritdoc INebularFactory
     mapping(address => mapping(address => mapping(uint24 => address))) public override getPool;
 
+    /// @notice Implementation contract address used for pool clones
+    address public immutable poolImplementation;
+
     /**
-     * @notice Initializes the factory setting deployer as owner and default fee tiers
-     * @dev Emits OwnerChanged from zero address and FeeAmountEnabled for each default tier
+     * @dev Initializes default fee tiers and sets deployer as owner
      */
-    constructor() {
+    constructor(address _poolImplementation) {
+        if (_poolImplementation == address(0)) revert ZeroImplementation();
         owner = msg.sender;
         emit OwnerChanged(address(0), msg.sender);
 
-        feeAmountTickSpacing[500] = 10;
-        emit FeeAmountEnabled(500, 10);
-        feeAmountTickSpacing[3000] = 60;
-        emit FeeAmountEnabled(3000, 60);
+        feeAmountTickSpacing[500]   = 10;
+        feeAmountTickSpacing[3000]  = 60;
         feeAmountTickSpacing[10000] = 200;
+
+        emit FeeAmountEnabled(500, 10);
+        emit FeeAmountEnabled(3000, 60);
         emit FeeAmountEnabled(10000, 200);
+
+        poolImplementation = _poolImplementation;
+    }
+
+    /**
+     * @notice Sorts two token addresses to canonical order
+     * @dev Reverts if tokens are identical or zero address
+     * @param tokenA One token address
+     * @param tokenB The other token address
+     * @return token0 The lower address
+     * @return token1 The higher address
+     */
+    function _sortTokens(address tokenA, address tokenB)
+        internal
+        pure
+        returns (address token0, address token1)
+    {
+        if (tokenA == tokenB) revert IdenticalAddresses();
+        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        if (token0 == address(0)) revert ZeroAddress();
     }
 
     /// @inheritdoc INebularFactory
@@ -42,35 +63,34 @@ contract NebularFactory is INebularFactory, NebularPoolDeployer, NoDelegateCall 
         address tokenB,
         uint24 fee
     ) external override noDelegateCall returns (address pool) {
-        require(tokenA != tokenB);
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0));
+        (address token0, address token1) = _sortTokens(tokenA, tokenB);
         int24 tickSpacing = feeAmountTickSpacing[fee];
-        require(tickSpacing != 0);
-        require(getPool[token0][token1][fee] == address(0));
-        pool = deploy(address(this), token0, token1, fee, tickSpacing);
+        if (tickSpacing == 0) revert InvalidFee();
+        if (getPool[token0][token1][fee] != address(0)) revert PoolExists();
+
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
+        pool = Clones.cloneDeterministic(poolImplementation, salt);
+        NebularPool(pool).initialize(address(this), token0, token1, fee, tickSpacing);
+
         getPool[token0][token1][fee] = pool;
-        // populate mapping in the reverse direction, deliberate choice to avoid the cost of comparing addresses
         getPool[token1][token0][fee] = pool;
+
         emit PoolCreated(token0, token1, fee, tickSpacing, pool);
     }
 
     /// @inheritdoc INebularFactory
     function setOwner(address _owner) external override {
-        require(msg.sender == owner);
+        if (msg.sender != owner) revert Forbidden();
         emit OwnerChanged(owner, _owner);
         owner = _owner;
     }
 
     /// @inheritdoc INebularFactory
     function enableFeeAmount(uint24 fee, int24 tickSpacing) public override {
-        require(msg.sender == owner);
-        require(fee < 1000000);
-        // tick spacing is capped at 16384 to prevent the situation where tickSpacing is so large that
-        // TickBitmap#nextInitializedTickWithinOneWord overflows int24 container from a valid tick
-        // 16384 ticks represents a >5x price change with ticks of 1 bips
-        require(tickSpacing > 0 && tickSpacing < 16384);
-        require(feeAmountTickSpacing[fee] == 0);
+        if (msg.sender != owner) revert Forbidden();
+        if (fee >= 1_000_000) revert FeeTooHigh();
+        if (tickSpacing <= 0 || tickSpacing >= 16_384) revert InvalidTickSpacing();
+        if (feeAmountTickSpacing[fee] != 0) revert AlreadyEnabled();
 
         feeAmountTickSpacing[fee] = tickSpacing;
         emit FeeAmountEnabled(fee, tickSpacing);

@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title INebularTokenVester
- * @notice Interface for the TokenVester vesting contract handling configurable release schedules.
+ * @notice Interface for the NebularTokenVester vesting contract handling configurable release schedules.
  */
 interface INebularTokenVester {
     /**
