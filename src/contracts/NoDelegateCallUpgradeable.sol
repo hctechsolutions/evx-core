@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@nebular/libraries/Errors.sol";
+
 /**
  * @title NoDelegateCallUpgradeable
  * @notice Base contract to prevent functions from being executed via delegatecall when used behind a proxy.
@@ -13,9 +15,6 @@ abstract contract NoDelegateCallUpgradeable {
 
     /// @custom:gap Reserved storage space to allow for layout changes in the future.
     uint256[49] private __gap;
-
-    error AlreadyInitialized();
-    error NoDelegateCall();
 
     /**
      * @notice Initializes the no-delegate-call guard.
@@ -31,7 +30,7 @@ abstract contract NoDelegateCallUpgradeable {
      * @dev Reverts if the call context differs from the original deployment address.
      */
     modifier noDelegateCall() {
-        if (address(this) != _noDelegateCallOriginal) revert NoDelegateCall();
+        if (address(this) != _noDelegateCallOriginal) revert NoDelegateCallError();
         _;
     }
 }

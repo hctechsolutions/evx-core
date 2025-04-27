@@ -6,9 +6,8 @@ import { NebularTokenVester } from "@nebular/contracts/governance/NebularTokenVe
 import { NebularGovernance } from "@nebular/contracts/governance/NebularGovernance.sol";
 import { NebularToken } from "@nebular/contracts/governance/NebularToken.sol";
 import { NebularFactory } from "@nebular/contracts/NebularFactory.sol";
-import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import "@nebular/contracts/NebularPool.sol";
 import { Script } from "forge-std/Script.sol";
+import "@nebular/contracts/NebularPool.sol";
 import "forge-std/console.sol";
 
 /**

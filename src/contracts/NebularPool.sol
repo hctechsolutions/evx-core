@@ -9,90 +9,33 @@ import "@nebular/interfaces/INebularPool.sol";
 
 import "@nebular/contracts/NoDelegateCallUpgradeable.sol";
 
-import "@nebular/libraries/LowGasSafeMath.sol";
-import "@nebular/libraries/SafeCast.sol";
-import "@nebular/libraries/Tick.sol";
-import "@nebular/libraries/TickBitmap.sol";
-import "@nebular/libraries/Position.sol";
-import "@nebular/libraries/Oracle.sol";
+import { LowGasSafeMath } from "@nebular/libraries/LowGasSafeMath.sol";
+import { TransferHelper } from "@nebular/libraries/TransferHelper.sol";
+import { FixedPoint128 } from "@nebular/libraries/FixedPoint128.sol";
+import { LiquidityMath } from "@nebular/libraries/LiquidityMath.sol";
+import { SqrtPriceMath } from "@nebular/libraries/SqrtPriceMath.sol";
+import { TickBitmap } from "@nebular/libraries/TickBitmap.sol";
+import { SafeCast } from "@nebular/libraries/SafeCast.sol";
+import { Position } from "@nebular/libraries/Position.sol";
+import { FullMath } from "@nebular/libraries/FullMath.sol";
+import { TickMath } from "@nebular/libraries/TickMath.sol";
+import { SwapMath } from "@nebular/libraries/SwapMath.sol";
+import { Oracle } from "@nebular/libraries/Oracle.sol";
+import { Tick } from "@nebular/libraries/Tick.sol";
 
-import "@nebular/libraries/FullMath.sol";
-import "@nebular/libraries/FixedPoint128.sol";
-import "@nebular/libraries/TransferHelper.sol";
-import "@nebular/libraries/TickMath.sol";
-import "@nebular/libraries/LiquidityMath.sol";
-import "@nebular/libraries/SqrtPriceMath.sol";
-import "@nebular/libraries/SwapMath.sol";
+import "@nebular/libraries/Errors.sol";
 
 import "@nebular/interfaces/INebularFactory.sol";
 import "@nebular/interfaces/callback/INebularMintCallback.sol";
 import "@nebular/interfaces/callback/INebularSwapCallback.sol";
 import "@nebular/interfaces/callback/INebularFlashCallback.sol";
 
-
-/// @notice Reentrancy lock
-error Locked();
-
-/// @notice Só o dono da factory pode chamar
-error OnlyFactoryOwner();
-
-error AlreadyInitialized();
-
-/// @notice tickLower >= tickUpper
-error InvalidTickOrder();
-
-/// @notice tickLower abaixo do mínimo permitido
-error TickLowerBelowMinimum();
-
-/// @notice tickUpper acima do máximo permitido
-error TickUpperAboveMaximum();
-
-/// @notice falha ao ler saldo via staticcall
-error BalanceQueryFailed();
-
-/// @notice snapshot: lower tick não inicializado
-error LowerTickNotInitialized();
-
-/// @notice snapshot: upper tick não inicializado
-error UpperTickNotInitialized();
-
-/// @notice quantidade para mint deve ser > 0
-error MintZeroAmount();
-
-/// @notice mint: saldo0 insuficiente
-error InsufficientBalance0();
-
-/// @notice mint: saldo1 insuficiente
-error InsufficientBalance1();
-
-/// @notice swap: amountSpecified ≠ 0
-error ZeroSwapAmount();
-
-/// @notice swap: price limit violado
-error SqrtPriceLimit();
-
-/// @notice swap: input amount insuficiente
-error InsufficientInputAmount();
-
-/// @notice swap: não há liquidez
-error NoLiquidity();
-
-/// @notice flash: fee0 não recebida
-error FlashFee0NotReceived();
-
-/// @notice flash: fee1 não recebida
-error FlashFee1NotReceived();
-
-/// @notice parâmetros de feeProtocol fora do intervalo válido
-error InvalidFeeProtocol();
-
-
 /**
  * @title NebularPool
  * @notice Nebular-style pool implementation handling liquidity, swaps, and fees for a token pair
  * @dev Initializes parameters via INebularPoolDeployer; protected against delegate calls and reentrancy
  */
-contract NebularPool is INebularPool, NoDelegateCallUpgradeable, Initializable {
+contract NebularPool is INebularPool, NoDelegateCallUpgradeable {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
 
@@ -461,7 +404,7 @@ contract NebularPool is INebularPool, NoDelegateCallUpgradeable, Initializable {
         address _token1,
         uint24  _fee,
         int24 _tickSpacing
-    ) external initializer {
+    ) external {
         __NoDelegateCall_init();
 
         factory = _factory;
@@ -684,6 +627,7 @@ contract NebularPool is INebularPool, NoDelegateCallUpgradeable, Initializable {
 
         uint256 balance0Before;
         uint256 balance1Before;
+        
         if (amount0 > 0) balance0Before = balance0();
         if (amount1 > 0) balance1Before = balance1();
         INebularMintCallback(msg.sender).nebularMintCallback(amount0, amount1, data);

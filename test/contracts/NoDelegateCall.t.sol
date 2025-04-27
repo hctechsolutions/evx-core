@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import { NoDelegateCall } from "@nebular/contracts/NoDelegateCall.sol";
+import { NoDelegateCallError } from "@nebular/contracts/NoDelegateCall.sol";
 
 /**
  * @title Child
@@ -36,8 +37,13 @@ contract DelegateCaller {
         (bool success, bytes memory data) = target.delegatecall(
             abi.encodeWithSignature("protectedCall()")
         );
-        require(success, getRevertMessage(data));
-        result = abi.decode(data, (uint256));
+        if (!success) {
+            // Propaga exatamente o revert do child (incluindo selector de custom error)
+            assembly {
+                revert(add(data, 0x20), mload(data))
+            }
+        }
+        return abi.decode(data, (uint256));
     }
 
     /**
@@ -48,10 +54,8 @@ contract DelegateCaller {
      */
     function getRevertMessage(bytes memory data) internal pure returns (string memory message) {
         if (data.length < 68) return "delegatecall reverted";
-        assembly {
-            data := add(data, 0x04)
-        }
-        message = abi.decode(data, (string));
+        assembly { data := add(data, 0x04) }
+        return abi.decode(data, (string));
     }
 }
 
@@ -61,17 +65,14 @@ contract DelegateCaller {
  * @dev Verifies that direct calls succeed and delegatecalls are properly rejected.
  */
 contract NoDelegateCallTest is Test {
-    /// @notice Instance of the Child contract that implements the delegatecall protection.
-    Child public child;
-
-    /// @notice Instance of the DelegateCaller contract used to perform delegatecalls.
+    Child         public child;
     DelegateCaller public delegateCaller;
 
     /**
      * @notice Deploys Child and DelegateCaller contracts for testing.
      */
     function setUp() public {
-        child = new Child();
+        child          = new Child();
         delegateCaller = new DelegateCaller();
     }
 
@@ -89,7 +90,7 @@ contract NoDelegateCallTest is Test {
      * @dev Expects the call to revert with a specific revert reason.
      */
     function testDelegateCallReverts() public {
-        vm.expectRevert(bytes("NoDelegateCall: delegatecall not allowed"));
+        vm.expectRevert(NoDelegateCallError.selector);
         delegateCaller.callViaDelegate(address(child));
     }
 }
