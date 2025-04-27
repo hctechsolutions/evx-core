@@ -5,9 +5,15 @@ import { TimelockController } from "@openzeppelin/contracts/governance/TimelockC
 import { NebularTokenVester } from "@nebular/contracts/governance/NebularTokenVester.sol";
 import { NebularGovernance } from "@nebular/contracts/governance/NebularGovernance.sol";
 import { NebularToken } from "@nebular/contracts/governance/NebularToken.sol";
+
 import { NebularFactory } from "@nebular/contracts/NebularFactory.sol";
+import { NebularPool } from "@nebular/contracts/NebularPool.sol";
+
+import { NebularFlashCallee } from "@nebular/contracts/peripherals/NebularFlashCallee.sol";
+import { NebularSwapCallee } from "@nebular/contracts/peripherals/NebularSwapCallee.sol";
+import { NebularMintCallee } from "@nebular/contracts/peripherals/NebularMintCallee.sol";
+
 import { Script } from "forge-std/Script.sol";
-import "@nebular/contracts/NebularPool.sol";
 import "forge-std/console.sol";
 
 /**
@@ -179,9 +185,21 @@ contract DeployV1 is Script {
         console.log("Nebular factory transferred to DAO");
 
         // ======================
+        // Deploy Peripherals
+        // ======================
+        NebularSwapCallee swapCallee = new NebularSwapCallee(address(dao), address(factory));
+        console.log("NebularSwapCallee deployed at:", address(swapCallee));
+
+        NebularMintCallee mintCallee = new NebularMintCallee(address(dao), address(factory));
+        console.log("NebularMintCallee deployed at:", address(mintCallee));
+
+        NebularFlashCallee flashCallee = new NebularFlashCallee(address(dao), address(factory));
+        console.log("NebularFlashCallee deployed at:", address(flashCallee));
+
+        // ======================
         // Deployment Summary
         // ======================
-        console.log("\n======== DEPLOYMENT SUMMARY ========");
+        console.log("======== DEPLOYMENT SUMMARY ========");
         console.log("Nebular Token (NBL):", address(nbl));
         console.log("Nebular DAO:", address(dao));
         console.log("Timelock:", address(timelock));
@@ -191,6 +209,10 @@ contract DeployV1 is Script {
         console.log("  - Team:", address(teamVester));
         console.log("  - Seed:", address(seedVester));
         console.log("  - Marketing:", address(marketingVester));
+        console.log("Peripherals Contracts:");
+        console.log("  - Flash Callee:", address(flashCallee));
+        console.log("  - Swap Callee:", address(swapCallee));
+        console.log("  - Mint Callee:", address(mintCallee));
         console.log("===================================");
 
         vm.stopBroadcast();

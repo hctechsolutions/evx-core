@@ -5,118 +5,92 @@ pragma solidity ^0.8.20;
 /// @notice Gas-efficient, grouped error definitions for Nebular contracts
 /// @dev Errors are organized to improve readability, reuse and maintenance
 
-/// @notice Pool is currently locked (reentrancy guard triggered)
-/// @dev Thrown by the `lock` modifier when reentrant entry is detected
+/// @notice Re-entrancy detected; operation aborted.
 error Locked();
 
-/// @notice Caller is not the factory owner
-/// @dev Thrown by the `onlyFactoryOwner` modifier if sender ≠ factory owner
+/// @notice Action restricted to the protocol owner or administrator.
 error OnlyFactoryOwner();
 
-/// @notice Observation initialization has already been performed
-/// @dev Thrown by `initializeObservation` when slot0.sqrtPriceX96 ≠ 0
+/// @notice Operation has already been executed once.
 error AlreadyInitialized();
 
-/// @notice Provided tick range is invalid: lower must be < upper
-/// @dev Thrown by `checkTicks` when tickLower ≥ tickUpper
+/// @notice Tick range must have lower value strictly less than upper value.
 error InvalidTickOrder();
 
-/// @notice Provided tickLower is below the minimum allowable value
-/// @dev Thrown when tickLower ≤ TickMath.MIN_TICK
+/// @notice Lower tick is below the supported minimum.
 error TickLowerBelowMinimum();
 
-/// @notice Provided tickUpper is above the maximum allowable value
-/// @dev Thrown when tickUpper ≥ TickMath.MAX_TICK
+/// @notice Upper tick is above the supported maximum.
 error TickUpperAboveMaximum();
 
-/// @notice Failed to retrieve token balance via staticcall
-/// @dev Thrown by `balance0` or `balance1` on unsuccessful call or malformed return
+/// @notice Unable to obtain token balance from the token contract.
 error BalanceQueryFailed();
 
-/// @notice Cannot snapshot cumulatives: lower tick not initialized
-/// @dev Thrown by `snapshotCumulativesInside` when lower.tick.initialized = false
+/// @notice Lower tick has not been initialized.
 error LowerTickNotInitialized();
 
-/// @notice Cannot snapshot cumulatives: upper tick not initialized
-/// @dev Thrown by `snapshotCumulativesInside` when upper.tick.initialized = false
+/// @notice Upper tick has not been initialized.
 error UpperTickNotInitialized();
 
-/// @notice Cannot mint zero liquidity; amount must be > 0
-/// @dev Thrown at the start of `mint` if amount = 0
+/// @notice Liquidity amount must be greater than zero.
 error MintZeroAmount();
 
-/// @notice Mint operation failed: insufficient token0 balance repaid
-/// @dev Thrown after callback if balance0 did not increase by required amount
+/// @notice Insufficient token0 provided to satisfy the required amount.
 error InsufficientBalance0();
 
-/// @notice Mint operation failed: insufficient token1 balance repaid
-/// @dev Thrown after callback if balance1 did not increase by required amount
+/// @notice Insufficient token1 provided to satisfy the required amount.
 error InsufficientBalance1();
 
-/// @notice Swap operation cannot process zero amountSpecified
-/// @dev Thrown at the start of `swap` if amountSpecified = 0
+/// @notice Swap amount cannot be zero.
 error ZeroSwapAmount();
 
-/// @notice Swap operation violated sqrtPriceLimitX96 bounds
-/// @dev Thrown if sqrtPriceLimitX96 is outside valid Q64.96 range or on wrong side
+/// @notice Price limit violated during swap.
 error SqrtPriceLimit();
 
-/// @notice Swap operation failed: insufficient input token amount repaid
-/// @dev Thrown after callback if balance did not increase by required input amount
+/// @notice Insufficient input amount received during swap settlement.
 error InsufficientInputAmount();
 
-/// @notice Swap operation requires positive in-range liquidity
-/// @dev Thrown by `swap` or `flash` when liquidity = 0
+/// @notice No available liquidity in the current price range.
 error NoLiquidity();
 
-/// @notice Flash loan: required fee0 was not repaid
-/// @dev Thrown after callback if balance0After < balance0Before + fee0
+/// @notice Flash-loan fee for token0 was not fully repaid.
 error FlashFee0NotReceived();
 
-/// @notice Flash loan: required fee1 was not repaid
-/// @dev Thrown after callback if balance1After < balance1Before + fee1
+/// @notice Flash-loan fee for token1 was not fully repaid.
 error FlashFee1NotReceived();
 
-/// @notice Provided implementation address is the zero address
-/// @dev Thrown by NebularFactory constructor if poolImplementation = address(0)
+/// @notice Implementation address must not be the zero address.
 error ZeroImplementation();
 
-/// @notice Provided token pair addresses are identical
-/// @dev Thrown by `_sortTokens` or `createPool` on identical tokens
+/// @notice Token pair addresses must not be identical.
 error IdenticalAddresses();
 
-/// @notice Provided token0 or token1 address is the zero address
-/// @dev Thrown by `_sortTokens` or `createPool` when token0 = address(0)
+/// @notice Zero address not allowed.
 error ZeroAddress();
 
-/// @notice Provided fee tier is not supported or enabled
-/// @dev Thrown by `createPool` or `enableFeeAmount` when fee mapping = 0
+/// @notice Unsupported or disabled fee tier.
 error InvalidFee();
 
-/// @notice A pool for the given token pair and fee already exists
-/// @dev Thrown by `createPool` when getPool[...] ≠ address(0)
+/// @notice A pool for the given token pair and fee already exists.
 error PoolExists();
 
-/// @notice Caller is not authorized to perform this action
-/// @dev Thrown by `setOwner` or `enableFeeAmount` when msg.sender ≠ owner
+/// @notice Callback invoked by an address that is not a recognized pool.
+error InvalidPool();
+
+/// @notice Caller is not authorized to perform this action.
 error Forbidden();
 
-/// @notice Provided fee tier exceeds the maximum allowable value
-/// @dev Thrown by `enableFeeAmount` when fee ≥ 1e6
+/// @notice Fee tier exceeds the maximum allowable value.
 error FeeTooHigh();
 
-/// @notice Provided tick spacing is out of valid range (0 < spacing < 16384)
-/// @dev Thrown by `enableFeeAmount` when tickSpacing ≤ 0 or ≥ 16384
+/// @notice Tick spacing must be within the supported range.
 error InvalidTickSpacing();
 
-/// @notice Fee tier has already been enabled with tick spacing
-/// @dev Thrown by `enableFeeAmount` when fee mapping ≠ 0
+/// @notice Fee tier has already been enabled.
 error AlreadyEnabled();
 
-/// @notice Prevents a function from being executed via delegatecall
-/// @dev Thrown by NoDelegateCall modifier if call context ≠ contract address
+/// @notice Function cannot be executed via delegatecall.
 error NoDelegateCallError();
 
-/// @notice Provided fee protocol parameters are outside valid range
-/// @dev Thrown by `setFeeProtocol` when `feeProtocol0` or `feeProtocol1` are not 0 or outside [4,10]
+/// @notice Fee-protocol parameters are outside the valid range.
 error InvalidFeeProtocol();
