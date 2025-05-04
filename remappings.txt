@@ -1,5 +1,4 @@
 forge-std/=lib/forge-std/src/
 @openzeppelin/=lib/openzeppelin-contracts/
 @openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable
-@chainlink/=lib/chainlink
 @nebular/=src

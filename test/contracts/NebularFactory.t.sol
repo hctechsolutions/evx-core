@@ -103,11 +103,29 @@ contract NebularFactoryTest is Test {
     }
 
     /// @notice Tests constructor initialization.
-    function testConstructorSetsOwnerAndFees() public {
+    function testConstructorSetsOwnerAndFees() public view {
         assertEq(factory.owner(), owner);
         assertEq(factory.feeAmountTickSpacing(500), 10);
         assertEq(factory.feeAmountTickSpacing(3000), 60);
         assertEq(factory.feeAmountTickSpacing(10000), 200);
+    }
+
+    function testPredictsCorrectPoolAddress() public {
+        uint24 fee = 500;
+
+        (address token0, address token1) = address(tokenA) < address(tokenB)
+            ? (address(tokenA), address(tokenB))
+            : (address(tokenB), address(tokenA));
+
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
+        address predicted = Clones.predictDeterministicAddress(
+            address(poolImpl),
+            salt,
+            address(factory)
+        );
+
+        address pool = factory.createPool(address(tokenA), address(tokenB), fee);
+        assertEq(pool, predicted, "Deployed address should match predicted CREATE2 address");
     }
 
     /// @notice Tests successful pool creation.

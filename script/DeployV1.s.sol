@@ -9,10 +9,6 @@ import { NebularToken } from "@nebular/contracts/governance/NebularToken.sol";
 import { NebularFactory } from "@nebular/contracts/NebularFactory.sol";
 import { NebularPool } from "@nebular/contracts/NebularPool.sol";
 
-import { NebularFlashCallee } from "@nebular/contracts/peripherals/NebularFlashCallee.sol";
-import { NebularSwapCallee } from "@nebular/contracts/peripherals/NebularSwapCallee.sol";
-import { NebularMintCallee } from "@nebular/contracts/peripherals/NebularMintCallee.sol";
-
 import { Script } from "forge-std/Script.sol";
 import "forge-std/console.sol";
 
@@ -28,7 +24,7 @@ import "forge-std/console.sol";
  *      6. Pool factory implementing pools in standard EIP-1967 (Minimal proxy)
  */
 contract DeployV1 is Script {
-    /// @notice Private keys for wallet addresses
+    // /// @notice Private keys for wallet addresses
     uint256 private marketingPrivateKey = vm.envUint("MARKETING_PRIVATE_KEY");
     uint256 private treasuryPrivateKey = vm.envUint("TREASURY_PRIVATE_KEY");
     uint256 private partnersPrivateKey = vm.envUint("PARTNERS_PRIVATE_KEY");
@@ -51,6 +47,7 @@ contract DeployV1 is Script {
     uint256 public constant EXECUTORS_COUNT = 5;
 
     function run() external {
+        console.log("Deploying from", msg.sender);
         vm.startBroadcast(deployerPrivateKey);
 
         // ======================
@@ -184,35 +181,15 @@ contract DeployV1 is Script {
         factory.setOwner(address(dao));
         console.log("Nebular factory transferred to DAO");
 
-        // ======================
-        // Deploy Peripherals
-        // ======================
-        NebularSwapCallee swapCallee = new NebularSwapCallee(address(dao), address(factory));
-        console.log("NebularSwapCallee deployed at:", address(swapCallee));
-
-        NebularMintCallee mintCallee = new NebularMintCallee(address(dao), address(factory));
-        console.log("NebularMintCallee deployed at:", address(mintCallee));
-
-        NebularFlashCallee flashCallee = new NebularFlashCallee(address(dao), address(factory));
-        console.log("NebularFlashCallee deployed at:", address(flashCallee));
-
-        // ======================
-        // Deployment Summary
-        // ======================
-        console.log("======== DEPLOYMENT SUMMARY ========");
-        console.log("Nebular Token (NBL):", address(nbl));
-        console.log("Nebular DAO:", address(dao));
-        console.log("Timelock:", address(timelock));
-        console.log("Nebular Pool Factory:", address(factory));
-        console.log("Vesting Contracts:");
-        console.log("  - Liquidity:", address(liquidityVester));
-        console.log("  - Team:", address(teamVester));
-        console.log("  - Seed:", address(seedVester));
-        console.log("  - Marketing:", address(marketingVester));
-        console.log("Peripherals Contracts:");
-        console.log("  - Flash Callee:", address(flashCallee));
-        console.log("  - Swap Callee:", address(swapCallee));
-        console.log("  - Mint Callee:", address(mintCallee));
+        console.log("======== DEPLOYMENT ENVIRONMENT ========");
+        console.log(string.concat("NEBULAR_TOKEN_ADDR=", vm.toString(address(nbl))));
+        console.log(string.concat("NEBULAR_DAO_ADDR=", vm.toString(address(dao))));
+        console.log(string.concat("DAO_TIMELOCK_ADDR=", vm.toString(address(timelock))));
+        console.log(string.concat("NEBULAR_FACTORY_ADDR=", vm.toString(address(factory))));
+        console.log(string.concat("LIQUIDITY_VESTER_ADDR=", vm.toString(address(liquidityVester))));
+        console.log(string.concat("TEAM_VESTER_ADDR=", vm.toString(address(teamVester))));
+        console.log(string.concat("SEED_VESTER_ADDR=", vm.toString(address(seedVester))));
+        console.log(string.concat("MARKETING_VESTER_ADDR=", vm.toString(address(marketingVester))));
         console.log("===================================");
 
         vm.stopBroadcast();
