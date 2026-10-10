@@ -1,0 +1,75 @@
+name: Evx Core CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Show Forge version
+        run: forge --version
+
+      - name: Run Forge build
+        run: forge build
+        id: build
+
+      - name: Check EvxPool deployed size
+        run: sh script/check-evxpool-size.sh
+
+      - name: Run Forge tests
+        run: forge test
+        id: test
+
+  docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    # Credentials stay in GitHub Actions secrets (never in the repo).
+    # The ECR account id is not a secret. Replace the access-key pair with
+    # GitHub OIDC + an IAM role when that role exists; do not add a role ARN here
+    # until it is created in AWS.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run Forge docs
+        run: forge doc --build
+        id: doc
+
+      - name: Build and publish documentation
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin 905418344172.dkr.ecr.${AWS_REGION}.amazonaws.com
+          docker build -t docs:latest .
+          docker tag docs:latest 905418344172.dkr.ecr.${AWS_REGION}.amazonaws.com/docs:latest
+          docker push 905418344172.dkr.ecr.${AWS_REGION}.amazonaws.com/docs:latest

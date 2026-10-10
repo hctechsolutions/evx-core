@@ -1,0 +1,24 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+
+optimizer = true
+optimizer_runs = 1
+bytecode_hash = "none"
+via_ir = true
+# FOUNDRY_PROFILE=ci (CI env) has no [profile.ci]; Foundry falls back to [profile.default].
+# Do not retune optimizer_runs / via_ir to "fix" size — the CI gate is script/check-evxpool-size.sh.
+
+auto_detect_remappings = false
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "@openzeppelin/=lib/openzeppelin-contracts/",
+  "@openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable",
+  "@evx-core/=src"
+]
+
+# No [rpc_endpoints] in this repository. Forks and network deploys live in evx-deploy
+# or in a local environment that is not committed.
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
