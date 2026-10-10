@@ -12,11 +12,9 @@ broadcast/**/dry-run/
 .env.*
 !.env-example
 
-# Generated docs and CI download leftovers
+# Generated docs
 docs/
 docs/book/
-awscliv2.zip
-aws/
 
 # Local notes and editor state
 annotations.txt
