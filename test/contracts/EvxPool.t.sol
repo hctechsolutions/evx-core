@@ -569,14 +569,30 @@ contract EvxPoolTest is Test {
         MockERC20 tokenC = new MockERC20("TokenC", "TKC");
         MockERC20 tokenD = new MockERC20("TokenD", "TKD");
 
-        address predictedCb = vm.computeCreateAddress(address(this), vm.getNonce(address(this)));
+        // CREATE2, not nonce prediction: newer Foundry builds report vm.getNonce
+        // without the CREATEs already performed in this same test call.
+        (address token0, address token1) = address(tokenC) < address(tokenD)
+            ? (address(tokenC), address(tokenD))
+            : (address(tokenD), address(tokenC));
+        bytes32 poolSalt = keccak256(abi.encodePacked(token0, token1, uint24(500)));
+        address predictedPool =
+            Clones.predictDeterministicAddress(factory.poolImplementation(), poolSalt, address(factory));
+
+        bytes32 cbSalt = keccak256("reentrancy-callback");
+        bytes memory initCode = abi.encodePacked(
+            type(ReentrantSwapCallbackMock).creationCode,
+            abi.encode(ERC20(token0), ERC20(token1), EvxPool(predictedPool), uint24(1000))
+        );
+        address predictedCb = vm.computeCreate2Address(cbSalt, keccak256(initCode), address(this));
+
         address poolAddr = factory.createPool(address(tokenC), address(tokenD), 500, FEE_MAX, predictedCb);
         EvxPool reentrancyPool = EvxPool(payable(poolAddr));
+        assertEq(poolAddr, predictedPool);
         reentrancyPool.initializeObservation(TickMath.getSqrtRatioAtTick(0));
 
-        ReentrantSwapCallbackMock reentrantCb = new ReentrantSwapCallbackMock(
-            ERC20(reentrancyPool.token0()),
-            ERC20(reentrancyPool.token1()),
+        ReentrantSwapCallbackMock reentrantCb = new ReentrantSwapCallbackMock{salt: cbSalt}(
+            ERC20(token0),
+            ERC20(token1),
             reentrancyPool,
             1000
         );
